@@ -1,0 +1,70 @@
+﻿@page "/history"
+@rendermode InteractiveServer
+@inject NavigationManager Navigation
+
+<PageTitle>Home</PageTitle>
+
+<header class="header-section">
+    <div class="header-left">
+        <div class="header-logo" @onclick="GoToHome">
+        </div>
+    </div>
+    <div class="header-right">
+        <button class="auth-button">Wyloguj</button>
+    </div>
+</header>
+
+<main class="main-content-area">
+        <div class="sort-bar">
+            <label for="sortby">Sortuj po:</label>
+            <select class="form-select" id="sortby">
+                <option value="1">Opcja 1</option>
+                <option value="2">Opcja 2</option>
+                <option value="3">Opcja 3</option>
+            </select>
+        </div>
+
+        <div class="product-list-block">
+            <h1>LISTA ZAKUPIONYCH PRODUKTÓW</h1>
+        <ul>
+            <li>Produkt przykład 1</li>
+            <li>Produkt przykład 2</li>
+            <li>Produkt przykład 3</li>
+            <li>Produkt przykład 4</li>
+            <li>Produkt przykład 5</li>
+            <li>Produkt przykład 6</li>
+            <li>Produkt przykład 7</li>
+            <li>Produkt przykład 8</li>
+            <li>Produkt przykład 9</li>
+            <li>Produkt przykład 10</li>
+        </ul>
+        </div>
+</main>
+
+
+
+
+
+
+<nav aria-label="Page navigation" class="d-flex justify-content-center mt-5">
+    <ul class="pagination">
+        <li class="page-item active"><a class="page-link">1</a></li>
+        <li class="page-item"><a class="page-link">2</a></li>
+        <li class="page-item"><a class="page-link">3</a></li>
+        <li class="page-item"><a class="page-link">...</a></li>
+        <li class="page-item"><a class="page-link">10</a></li>
+        <li class="page-item"><a class="page-link">11</a></li>
+    </ul>
+</nav>
+
+<footer class="footer-section">
+    Footer
+</footer>
+
+@code {
+    private void GoToHome()
+    {
+        Navigation.NavigateTo("/"); 
+    }
+
+}

@@ -1,0 +1,72 @@
+﻿@page "/"
+@rendermode InteractiveServer
+@inject NavigationManager Navigation
+
+<PageTitle>Home</PageTitle>
+
+<header class="header-section">
+    <div class="header-left">
+        <div class="header-logo" @onclick="GoToHome">
+        </div>
+        <div class="search-bar">
+            <input type="text" placeholder="Szukany produkt...">
+            <button type="button" class="search-button" @onclick="GoToProducts">Szukaj</button>
+        </div>
+    </div>
+    <div class="header-right">
+        <button class="auth-button" @onclick="Logowanie">Logowanie</button>
+        <button class="auth-button">Rejestracja</button>
+    </div>
+</header>
+
+<!-- Categories -->
+<section class="categories-section">
+    <button class="category-button">
+        <span>Kategoria</span>
+    </button>
+    <button class="category-button">
+        <span>Kategoria</span>
+    </button>
+    <button class="category-button">
+        <span>Kategoria</span>
+    </button>
+    <button class="category-button">
+        <span>Kategoria</span>
+    </button>
+    <button class="category-button">
+        <span>Kategoria</span>
+    </button>
+</section>
+
+
+<main class="main-content">
+    <div class="content-block">
+    </div>
+    <div class="content-block">
+
+    </div>
+    
+</main>
+
+
+<footer class="footer-section">
+    Footer
+</footer>
+
+@code {
+    private void GoToProducts()
+    {
+
+        Navigation.NavigateTo("/products");
+    }
+    private void Logowanie()
+    {
+
+        Navigation.NavigateTo("/login");
+    }
+    private void GoToHome()
+    {
+        Navigation.NavigateTo("/"); 
+    }
+
+}

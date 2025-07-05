@@ -1,0 +1,43 @@
+﻿@page "/login"
+@rendermode InteractiveServer
+@inject NavigationManager Navigation
+
+<PageTitle>Login</PageTitle>
+
+
+<header class="header-section">
+    <div class="header-left">
+        <div class="header-logo" @onclick="GoToHome">
+        </div>
+        </div>
+</header>
+
+<div class="login-container">
+
+    <div class="login-form">
+        <div class="form-field">
+            <label for="emailInput">Email</label>
+            <input type="email" id="emailInput" placeholder="Email">
+        </div>
+        <div class="form-field">
+            <label for="passwordInput">Password</label>
+            <input type="password" id="passwordInput" placeholder="Haslo">
+        </div>
+        <button type="button" class="login-button">Zaloguj</button>
+        <a class="forgot-password-link">Zapomniales hasla?</a>
+    </div>
+</div>
+
+
+
+<footer class="footer-section">
+    Footer
+</footer>
+
+@code {
+    private void GoToHome()
+    {
+        Navigation.NavigateTo("/");
+    }
+
+}

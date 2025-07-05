@@ -1,0 +1,48 @@
+﻿@page "/settings"
+@rendermode InteractiveServer
+@inject NavigationManager Navigation
+
+<PageTitle>Settings</PageTitle>
+
+<header class="header-section">
+    <div class="header-left">
+        <div class="header-logo" @onclick="GoToHome">
+        </div>
+        <h1> Ustawienia </h1>
+    </div>
+    <div class="header-right">
+        <button class="auth-button">Wyloguj</button>
+    </div>
+</header>
+
+<main class="main-content-area">
+    <div class="options-grid-container">
+        <div class="option-block" @onclick="GoToHistory">Historia zakupow</div>
+        <div class="option-block">OPTION</div>
+        <div class="option-block">OPTION</div>
+        <div class="option-block">OPTION</div>
+        <div class="option-block">OPTION</div>
+
+
+        <div class="option-block">OPTION</div>
+        <div class="option-block">OPTION</div>
+        <div class="option-block">OPTION</div>
+        <div class="option-block">OPTION</div>
+        <div class="option-block">OPTION</div>
+    </div>
+</main>
+
+
+<footer class="footer-section">
+    Footer
+</footer>
+@code {
+    private void GoToHome()
+    {
+        Navigation.NavigateTo("/"); 
+    }
+    private void GoToHistory()
+    {
+        Navigation.NavigateTo("/history");
+    }
+}
