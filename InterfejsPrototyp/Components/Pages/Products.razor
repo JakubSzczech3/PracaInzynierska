@@ -7,10 +7,11 @@
 @inject SharedStateService SharedState
 @inject NavigationManager Navigation
 @inject ProjectDbContext DB
-
-
+<div class="products-container">
 <PageTitle>Products</PageTitle>
+
 <div class="background">
+
 
 
     <header class="header-section">
@@ -46,17 +47,7 @@
                 <button class="auth-button" @onclick="GoToLogin">Log in</button>
             }
         </div>
-        <div class="cart-container" @onclick="GoToCart">
-            <i class="bi bi-cart3"></i>
-            @if (TotalItemsInCart > 0)
-            {
-                <span class="cart-badge">@TotalItemsInCart</span>
-            }
-            else
-            {
-                <span class="cart-count-zero">0</span>
-            }
-        </div>
+        
     </header>
 
     <main class ="main-content">
@@ -222,7 +213,7 @@
 
 
 
-
+</div>
 
 @code {
 
