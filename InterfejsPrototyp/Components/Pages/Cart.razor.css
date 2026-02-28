@@ -1,0 +1,22 @@
+﻿.cart-img-preview {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+.cart-item-row {
+    border: 1px solid #eee;
+}
+
+.summary-card {
+    border-top: 5px solid #198754;
+    position: sticky;
+    top: 20px;
+}
+
+.qty-section {
+    background: #f8f9fa;
+    padding: 5px 10px;
+    border-radius: 20px;
+}

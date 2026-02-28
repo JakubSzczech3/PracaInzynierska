@@ -1,0 +1,211 @@
+﻿@page "/addproducts"
+@rendermode InteractiveServer
+@using InterfejsPrototyp.Other
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@using Microsoft.AspNetCore.Components.Forms
+@inject ProtectedSessionStorage SessionStorage
+@inject NavigationManager Navigation
+@inject ProjectDbContext DB
+@inject IWebHostEnvironment Environment
+
+<div class="add-product-container">
+    @if (loggedUserId > 0)
+    {
+        <div class="card shadow-lg">
+            <div class="card-header">
+                <h3 class="mb-0">List a new product</h3>
+            </div>
+            <div class="card-body">
+
+                <div class="form-section mb-3">
+                    <label>Product name</label>
+                    <input @bind="newProduct.Name" class="form-control" placeholder="Enter product name..." />
+                </div>
+
+                <div class="form-section mb-3">
+                    <label>Description</label>
+                    <textarea @bind="newProduct.Description" class="form-control" rows="3" placeholder="Enter product description..."></textarea>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 form-section mb-3">
+                        <label>Price</label>
+                        <input type="number" @bind="newProduct.Price" class="form-control" step="0.01" />
+                    </div>
+                    <div class="col-md-4 form-section mb-3">
+                        <label>Condition</label>
+                        <select @bind="newProduct.Condition" class="form-control">
+                            <option value="New">New</option>
+                            <option value="Used">Used</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-4 form-section mb-3">
+                        <label>Category</label>
+                        @if (categories == null)
+                        {
+                            <p>Loading categories...</p>
+                        }
+                        else
+                        {
+                            <select @bind="newProduct.CategoryId" class="form-control">
+                                <option value="0">-- Select category --</option>
+                                @foreach (var cat in categories)
+                                {
+                                    <option value="@cat.CategoryId">@cat.Name</option>
+                                }
+                            </select>
+                        }
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 form-section mb-3">
+                        <label>Stock Quantity:</label>
+                        <input type="number" @bind="newProduct.StockQuantity" class="form-control" />
+                    </div>
+                </div>
+
+                <div class="form-section mb-4">
+                    <label>Product images (Max 4, up to 15MB each)</label>
+                    <InputFile OnChange="HandleFileSelected" multiple class="form-control" accept=".jpg,.jpeg,.png" />
+
+                    @if (selectedFiles.Any())
+                    {
+                        <div class="mt-3 d-flex gap-2">
+                            @foreach (var file in selectedFiles)
+                            {
+                                <div class="image-preview @(file == mainFile ? "border-primary" : "")"
+                                     @onclick="() => SetAsMain(file)">
+                                    <p class="small mb-0">@file.Name</p>
+                                    @if (file == mainFile)
+                                    {
+                                        <span class="badge bg-primary">Main image</span>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+
+                <div class="mt-4">
+                    <button class="btn btn-primary btn-lg w-100" @onclick="SaveProduct"
+                            disabled="@(newProduct.CategoryId == 0 || string.IsNullOrEmpty(newProduct.Name) || !selectedFiles.Any())">
+                        Publish offer
+                    </button>
+                    <button class="btn btn-secondary w-100 mt-2" @onclick='() => Navigation.NavigateTo("/products")'>
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+    else if (isChecking)
+    {
+        <div class="loader-container text-center mt-5">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="mt-2">Checking session...</p>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-danger shadow-sm text-center mt-5">
+            <h4>Access Denied</h4>
+            <button class="btn btn-outline-danger mt-3" @onclick='() => Navigation.NavigateTo("/login")'>Log In</button>
+        </div>
+    }
+</div>
+
+@code {
+    private Product newProduct = new Product { Condition = "New", StockQuantity = 1, CategoryId = 0 };
+    private List<Category>? categories;
+    private int loggedUserId;
+    private bool isChecking = true;
+
+    private List<IBrowserFile> selectedFiles = new();
+    private IBrowserFile? mainFile;
+    private long maxFileSize = 1024 * 1024 * 15;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try { categories = await DB.Categories.ToListAsync(); }
+        catch { }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                var result = await SessionStorage.GetAsync<int>("userId");
+                if (result.Success) loggedUserId = result.Value;
+            }
+            catch { }
+            finally { isChecking = false; StateHasChanged(); }
+        }
+    }
+
+    private void HandleFileSelected(InputFileChangeEventArgs e)
+    {
+        var files = e.GetMultipleFiles(4).ToList();
+        foreach (var file in files)
+        {
+            if (file.Size <= maxFileSize) selectedFiles.Add(file);
+        }
+        if (mainFile == null && selectedFiles.Any()) mainFile = selectedFiles.First();
+    }
+
+    private void SetAsMain(IBrowserFile file) => mainFile = file;
+
+    private async Task SaveProduct()
+    {
+        try
+        {
+            if (loggedUserId <= 0) return;
+
+          
+
+            newProduct.SellerId = loggedUserId;
+            newProduct.ImageUrl = "/uploads/placeholder.jpg";
+
+            DB.Products.Add(newProduct);
+            await DB.SaveChangesAsync();
+
+            var uploadPath = Path.Combine(Environment.WebRootPath, "uploads");
+            if (!Directory.Exists(uploadPath)) Directory.CreateDirectory(uploadPath);
+
+            foreach (var file in selectedFiles)
+            {
+                var fileName = $"{Guid.NewGuid()}_{file.Name}";
+                var path = Path.Combine(uploadPath, fileName);
+
+                await using var stream = file.OpenReadStream(maxFileSize);
+                await using var fs = new FileStream(path, FileMode.Create);
+                await stream.CopyToAsync(fs);
+
+                var imgRecord = new ProductImage
+                {
+                    ProductId = newProduct.ProductId,
+                    ImagePath = $"/uploads/{fileName}",
+                    IsMain = (file == mainFile)
+                };
+
+                if (file == mainFile)
+                {
+                    newProduct.ImageUrl = imgRecord.ImagePath;
+                }
+
+                DB.ProductImages.Add(imgRecord);
+            }
+
+            await DB.SaveChangesAsync();
+            Navigation.NavigateTo("/products");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Error: " + ex.Message);
+        }
+    }
+}

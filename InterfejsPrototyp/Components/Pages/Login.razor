@@ -1,6 +1,13 @@
 ﻿@page "/login"
+@using InterfejsPrototyp.Other
+@using Microsoft.EntityFrameworkCore
 @rendermode InteractiveServer
 @inject NavigationManager Navigation
+@inject InterfejsPrototyp.ProjectDbContext DB
+@inject SharedStateService SharedState
+@inject ProtectedSessionStorage SessionStorage
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+
 
 <PageTitle>Login</PageTitle>
 
@@ -13,21 +20,44 @@
 </header>
 
 <div class="login-container">
-
     <div class="login-form">
-        <div class="form-field">
-            <label for="emailInput">Email</label>
-            <input type="email" id="emailInput" placeholder="Email">
+        @if (ShowRegisteredMessage)
+        {
+            <div class="registration-alert">
+                <strong>Success!</strong> Your account is ready. Please log in below.
+            </div>
+        }
+        <h2 style="color: var(--text-color-dark);">Login to Your Account</h2>
+        <hr />
+
+        <EditForm Model="@LoginModel" OnValidSubmit="HandleLogin">
+            <DataAnnotationsValidator />
+
+            @if (!string.IsNullOrEmpty(ErrorMessage))
+            {
+                <div class="alert-danger">@ErrorMessage</div>
+            }
+
+            <div class="form-field">
+                <label>Email</label>
+                <InputText id="emailInput" @bind-Value="LoginModel.Email" placeholder="Your E-mail address" />
+                <ValidationMessage For="@(() => LoginModel.Email)" />
+            </div>
+
+            <div class="form-field">
+                <label>Password</label>
+                <InputText type="password" @bind-Value="LoginModel.Password" placeholder="Enter password" />
+                <ValidationMessage For="@(() => LoginModel.Password)" />
+            </div>
+
+            <button type="submit" class="login-button">Login</button>
+        </EditForm>
+
+        <div style="margin-top: 1rem; text-align: center;">
+            <p style="color: var(--text-color-dark);">Don't have an account? <a href="/register" style="color: #224470; font-weight: bold;">Register here</a>.</p>
         </div>
-        <div class="form-field">
-            <label for="passwordInput">Password</label>
-            <input type="password" id="passwordInput" placeholder="Haslo">
-        </div>
-        <button type="button" class="login-button">Zaloguj</button>
-        <a class="forgot-password-link">Zapomniales hasla?</a>
     </div>
 </div>
-
 
 
 <footer class="footer-section">
@@ -35,9 +65,67 @@
 </footer>
 
 @code {
-    private void GoToHome()
+    private void GoToHome() => Navigation.NavigateTo("/");
+    private void GoToRegister() => Navigation.NavigateTo("/register");
+
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "registered")]
+    public bool ShowRegisteredMessage { get; set; }
+
+    private LoginViewModel LoginModel = new();
+    private string? ErrorMessage;
+
+
+
+    public string? ReturnUrl { get; set; }
+
+    protected override void OnInitialized()
     {
-        Navigation.NavigateTo("/");
+        var uri = Navigation.ToAbsoluteUri(Navigation.Uri);
+
+        var queryParams = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(uri.Query);
+
+        if (queryParams.TryGetValue("returnUrl", out var foundValue))
+        {
+            ReturnUrl = foundValue;
+        }
+        else if (queryParams.TryGetValue("ReturnUrl", out var foundValueUpper))
+        {
+            ReturnUrl = foundValueUpper;
+        }
     }
+
+
+
+    private async Task HandleLogin()
+    {
+        ErrorMessage = null;
+
+        var user = await DB.Customers
+            .FirstOrDefaultAsync(c => c.Email == LoginModel.Email);
+
+        if (user != null && BCrypt.Net.BCrypt.Verify(LoginModel.Password, user.PasswordHash))
+        {
+            SharedState.Login(user.CustomerId, user.FirstName);
+            await SessionStorage.SetAsync("userId", user.CustomerId);
+            await SessionStorage.SetAsync("userName", user.FirstName);
+
+            if (!string.IsNullOrEmpty(ReturnUrl))
+            {
+                var destination = ReturnUrl.StartsWith("/") ? ReturnUrl : "/" + ReturnUrl;
+                Navigation.NavigateTo(destination);
+            }
+            else
+            {
+                Navigation.NavigateTo("/");
+            }
+        }
+        else
+        {
+            ErrorMessage = "Invalid email or password.";
+        }
+
+    }
+   
 
 }

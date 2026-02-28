@@ -91,3 +91,10 @@
     color: #FFFFFF;
     font-size: 0.9rem;
 }
+.dropdown-menu {
+    display: block; 
+    position: absolute;
+    z-index: 9999; 
+    background: white;
+    border: 1px solid #ccc;
+}

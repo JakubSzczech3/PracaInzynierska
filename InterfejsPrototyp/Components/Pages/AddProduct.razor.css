@@ -1,0 +1,79 @@
+﻿.add-product-container {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 0 15px;
+    font-family: 'Montserrat', sans-serif;
+}
+
+.card {
+    border: 2px solid #0B7615; 
+    border-radius: 15px;
+    overflow: hidden;
+    background-color: #FFFFFF;
+}
+
+.card-header {
+    background-color: #0B7615; 
+    color: #FFFFFF;
+    border-bottom: 1px solid #096111;
+    padding: 1.5rem;
+    font-weight: bold;
+}
+
+.form-section label {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #224470;
+
+.form-control:focus {
+    border-color: #0B7615; 
+    box-shadow: 0 0 0 0.2rem rgba(11, 118, 21, 0.25);
+}
+
+.image-preview {
+    border: 2px solid #d0d0d0;
+    padding: 10px;
+    border-radius: 10px;
+    cursor: pointer;
+    width: 130px;
+    text-align: center;
+    background-color: #fff;
+    transition: all 0.2s ease-in-out;
+}
+
+    .image-preview:hover {
+        background-color: #f1ecea;
+        border-color: #0B7615;
+    }
+
+
+    .image-preview.border-primary {
+        border-color: #224470 !important; 
+        background-color: #e9eff5;
+        box-shadow: 0 4px 8px rgba(34, 68, 112, 0.2);
+    }
+
+.badge.bg-primary {
+    background-color: #224470 !important; 
+    font-size: 0.65rem;
+    text-transform: uppercase;
+}
+
+
+.btn-primary {
+    background-color: #224470; 
+    border: none;
+    padding: 12px;
+    font-weight: 600;
+    border-radius: 10px;
+    transition: background-color 0.2s;
+}
+
+    .btn-primary:hover {
+        background-color: #1a3558; 
+    }
+
+
+.text-primary {
+    color: #0B7615 !important; 
+}

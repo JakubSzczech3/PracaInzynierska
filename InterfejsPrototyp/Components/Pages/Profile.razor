@@ -1,8 +1,12 @@
-﻿@page "/settings"
+﻿@page "/profile"
 @rendermode InteractiveServer
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
 @inject NavigationManager Navigation
+@inject SharedStateService SharedState
+@inject ProtectedSessionStorage SessionStorage
 
-<PageTitle>Settings</PageTitle>
+
+<PageTitle>Profile</PageTitle>
 
 <header class="header-section">
     <div class="header-left">
@@ -11,7 +15,7 @@
         <h1> Ustawienia </h1>
     </div>
     <div class="header-right">
-        <button class="auth-button">Wyloguj</button>
+        <button class="auth-button" @onclick="HandleLogout" >Wyloguj</button>
     </div>
 </header>
 
@@ -44,5 +48,25 @@
     private void GoToHistory()
     {
         Navigation.NavigateTo("/history");
+    }
+    private async Task HandleLogout()
+    {
+        isDropdownOpen = false;
+        SharedState.Logout();
+        try
+        {
+            await SessionStorage.DeleteAsync("userId");
+            await SessionStorage.DeleteAsync("userName");
+        }
+        catch
+        {
+        }
+    }
+    private bool isDropdownOpen = false;
+
+    private void ToggleDropdown()
+    {
+        isDropdownOpen = !isDropdownOpen;
+        StateHasChanged();
     }
 }

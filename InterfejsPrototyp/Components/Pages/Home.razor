@@ -1,6 +1,11 @@
 ﻿@page "/"
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@using Microsoft.EntityFrameworkCore
 @rendermode InteractiveServer
 @inject NavigationManager Navigation
+@inject SharedStateService SharedState
+@inject ProtectedSessionStorage SessionStorage
+@inject ProjectDbContext DB
 
 <PageTitle>Home</PageTitle>
 
@@ -9,64 +14,363 @@
         <div class="header-logo" @onclick="GoToHome">
         </div>
         <div class="search-bar">
-            <input type="text" placeholder="Szukany produkt...">
-            <button type="button" class="search-button" @onclick="GoToProducts">Szukaj</button>
+            <input type="text" @bind="homeSearchQuery" placeholder="Search your product" @onkeyup="HandleKeyUp" />
+            <button class='search-button' @onclick="GoToSearch">Search</button>
         </div>
     </div>
     <div class="header-right">
-        <button class="auth-button" @onclick="Logowanie">Logowanie</button>
-        <button class="auth-button">Rejestracja</button>
+
+        @if (SharedState.IsLoggedIn)
+        {
+            <div class="user-dropdown-container">
+                <div class="dropdown-trigger" @onclick="ToggleDropdown">
+                    Witaj, <b>@SharedState.UserName</b>! <span class="arrow">▼</span>
+                </div>
+
+                @if (isDropdownOpen)
+                {
+                    <div class="dropdown-menu">
+                        <button class="dropdown-item" @onclick="GoToProfile">Profile</button>
+                        <hr class="dropdown-divider" />
+                        <button class="dropdown-item logout" @onclick="HandleLogout">Log out</button>
+                    </div>
+                }
+            </div>
+            <button class="category-button" @onclick="GoToAddProducts">Add offer</button>
+        }
+        else
+        {
+            <button class="auth-button" @onclick="GoToLogin">Log in</button>
+        }
+    </div>
+    <div class="cart-container" @onclick="GoToCart">
+        <i class="bi bi-cart3"></i>
+        @if (TotalItemsInCart > 0)
+        {
+            <span class="cart-badge">@TotalItemsInCart</span>
+        }
+        else
+        {
+            <span class="cart-count-zero">0</span>
+        }
     </div>
 </header>
 
-<!-- Categories -->
+
 <section class="categories-section">
-    <button class="category-button">
-        <span>Kategoria</span>
-    </button>
-    <button class="category-button">
-        <span>Kategoria</span>
-    </button>
-    <button class="category-button">
-        <span>Kategoria</span>
-    </button>
-    <button class="category-button">
-        <span>Kategoria</span>
-    </button>
-    <button class="category-button">
-        <span>Kategoria</span>
-    </button>
+    <button class="category-button" @onclick='() => FilterByCategory("Electronics")'><span>Electronics</span></button>
+    <button class="category-button" @onclick='() => FilterByCategory("Home&Garden")'><span>Home & Garden</span></button>
+    <button class="category-button" @onclick='() => FilterByCategory("Fashion")'><span>Fashion</span></button>
+    <button class="category-button" @onclick='() => FilterByCategory("Sport")'><span>Sport</span></button>
+    <button class="category-button" @onclick='() => FilterByCategory("Motors")'><span>Motors</span></button>
 </section>
 
 
 <main class="main-content">
     <div class="content-block">
+        <h3>PLACEHOLDER</h3>
     </div>
     <div class="content-block">
-
+        <h3>PLACEHOLDER</h3>
     </div>
-    
 </main>
 
 
 <footer class="footer-section">
     Footer
 </footer>
+<style>
+    :root {
+        font-family: 'Montserrat', sans-serif;
+        background-color: #F1ECEA;
+    }
 
+
+    body {
+        color: #333;
+        margin: 0;
+    }
+
+    .header-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 2rem;
+        background-color: #0B7615;
+        color: #FFFFFF;
+        position: relative;
+        z-index: 1000;
+    }
+
+
+    .user-dropdown-container {
+        position: relative;
+        display: inline-block;
+    }
+
+    .dropdown-trigger {
+        cursor: pointer;
+        padding: 0.5rem 1rem;
+        color: #FFFFFF;
+        font-weight: bold;
+    }
+
+    .dropdown-menu {
+        display: block !important;
+        position: absolute;
+        top: 100%;
+        right: 0;
+        background-color: #FFFFFF !important;
+        min-width: 160px;
+        border: 1px solid #d0d0d0;
+        border-radius: 0.5rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        margin-top: 10px;
+        padding: 8px 0;
+        z-index: 9999;
+    }
+
+    .dropdown-item {
+        display: block;
+        width: 100%;
+        padding: 10px 20px;
+        border: none;
+        background: none;
+        text-align: left;
+        color: #224470 !important;
+        font-size: 0.9rem;
+        cursor: pointer;
+        font-family: 'Montserrat', sans-serif;
+    }
+
+        .dropdown-item:hover {
+            background-color: #f1ecea;
+        }
+
+        .dropdown-item.logout {
+            color: #ff0000 !important;
+            font-weight: bold;
+        }
+
+            .dropdown-item.logout:hover {
+                background-color: #ffeaea !important
+            }
+
+    .dropdown-divider {
+        border: 0;
+        border-top: 1px solid #eee;
+        margin: 5px 0;
+    }
+
+
+    .header-left {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .header-logo {
+        width: 100px;
+        height: 100px;
+        background-color: #e0e0e0;
+        border-radius: 0.5rem;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: #a0a0a0;
+        cursor: pointer;
+    }
+
+    .search-bar {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        width: 70vw;
+    }
+
+        .search-bar input {
+            width: 100%;
+            padding: 0.5rem 1rem;
+            border: 1px solid #d0d0d0;
+            border-radius: 0.5rem;
+            background-color: #224470;
+            color: #FFFFFF;
+        }
+
+    .search-button, .auth-button {
+        border-radius: 0.5rem;
+        padding: 0.4rem 0.8rem;
+        border: 1px solid #224470;
+        background-color: #224470;
+        color: #FFFFFF;
+        cursor: pointer;
+    }
+
+    .categories-section {
+        padding: 1rem 2rem;
+        background-color: #0B7615;
+        display: flex;
+        justify-content: center;
+        gap: 0.5rem;
+    }
+
+    .category-button {
+        padding: 0.4rem 0.8rem;
+        border: 1px solid #224470;
+        border-radius: 9999px;
+        background-color: #224470;
+        color: #FFFFFF;
+        cursor: pointer;
+    }
+
+    .main-content {
+        padding: 2rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        align-items: center;
+    }
+
+    .content-block {
+        background-color: #e0e0e0;
+        border-radius: 0.75rem;
+        width: 80%;
+        height: 300px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: #a0a0a0;
+    }
+
+    .footer-section {
+        padding: 1.5rem 2rem;
+        background-color: #0B7615;
+        color: #FFFFFF;
+    }
+
+    .cart-container {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        position: relative;
+        margin-left: 20px;
+        color: white;
+    }
+
+
+        .cart-container i {
+            font-size: 1.8rem;
+            color: white !important;
+        }
+
+
+    .cart-badge {
+        position: absolute;
+        top: -5px;
+        right: -10px;
+        background-color: #ff4d4d;
+        color: white;
+        font-size: 0.75rem;
+        padding: 2px 6px;
+        border-radius: 50%;
+        font-weight: bold;
+        border: 2px solid #008000;
+    }
+
+
+    .cart-count-zero {
+        margin-left: 5px;
+        color: white;
+        font-weight: bold;
+    }
+
+</style>
 @code {
-    private void GoToProducts()
-    {
+    private void GoToHome() => Navigation.NavigateTo("/");
+    private void GoToProfile() => Navigation.NavigateTo("/profile");
+    private void GoToAddProducts() => Navigation.NavigateTo("/addproducts");
+    private string homeSearchQuery = "";
+    private int TotalItemsInCart;
+    private void GoToCart() => Navigation.NavigateTo("/cart");
 
-        Navigation.NavigateTo("/products");
-    }
-    private void Logowanie()
-    {
 
-        Navigation.NavigateTo("/login");
-    }
-    private void GoToHome()
+    protected override void OnInitialized()
     {
-        Navigation.NavigateTo("/"); 
+        SharedState.OnChange += StateHasChanged;
     }
+    private async Task HandleLogout()
+    {
+        isDropdownOpen = false; 
+        SharedState.Logout();
+        try
+        {
+            await SessionStorage.DeleteAsync("userId");
+            await SessionStorage.DeleteAsync("userName");
+        }
+        catch
+        {
+        }
+    }
+    private bool isDropdownOpen = false;
+
+    private void ToggleDropdown()
+    {
+        isDropdownOpen = !isDropdownOpen;
+        StateHasChanged();
+    }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var resultId = await SessionStorage.GetAsync<int>("userId");
+            var resultName = await SessionStorage.GetAsync<string>("userName");
+
+            if (resultId.Success && resultName.Success)
+            {
+                if (!SharedState.IsLoggedIn)
+                {
+                    SharedState.Login(resultId.Value, resultName.Value!);
+
+                    await UpdateCartCounter();
+                    StateHasChanged();
+                }
+            }
+        }
+    }
+    private void GoToLogin()
+    {
+        var currentUri = Navigation.ToBaseRelativePath(Navigation.Uri);
+        Navigation.NavigateTo($"/login?returnUrl={Uri.EscapeDataString(currentUri)}");
+    }
+    private void FilterByCategory(string categoryName)
+    {
+        Navigation.NavigateTo($"/products?category={Uri.EscapeDataString(categoryName)}");
+    }
+    private void GoToSearch()
+    {
+        if (!string.IsNullOrWhiteSpace(homeSearchQuery))
+        {
+            Navigation.NavigateTo($"/products?search={Uri.EscapeDataString(homeSearchQuery)}");
+        }
+    }
+    private void HandleKeyUp(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter") GoToSearch();
+    }
+    private async Task UpdateCartCounter()
+    {
+        if (SharedState.UserId > 0)
+        {
+            TotalItemsInCart = await DB.CartItems
+                .Where(c => c.CustomerId == SharedState.UserId)
+                .SumAsync(c => (int?)c.Quantity) ?? 0;
+        }
+        else
+        {
+            TotalItemsInCart = 0;
+        }
+        StateHasChanged();
+    }
+
 
 }

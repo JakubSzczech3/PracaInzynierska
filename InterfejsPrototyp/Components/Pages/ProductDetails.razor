@@ -1,0 +1,322 @@
+﻿@page "/product/{Id:int}"
+@rendermode InteractiveServer
+@using InterfejsPrototyp.Other
+@using Microsoft.EntityFrameworkCore
+@inject ProjectDbContext DB
+@inject NavigationManager Navigation
+@inject SharedStateService SharedState
+
+<div class="container mt-5">
+    <button class="btn btn-outline-secondary mb-4" @onclick="GoBack">
+        &laquo; Back to products
+    </button>
+
+    @if (product is null)
+    {
+        <div class="text-center">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p>Loading...</p>
+        </div>
+    }
+    else
+    {
+
+        <div class="row shadow-sm bg-white rounded p-4">
+            <div class="col-md-6">
+                <div class="details-img-holder text-center mb-3">
+                    <img src="@mainImageUrl"
+                         class="img-fluid rounded product-main-img shadow-sm"
+                         alt="@product.Name"
+                         style="max-height: 450px; object-fit: contain; width: 100%;"
+                         onerror="this.src='/uploads/placeholder.jpg';" />
+                </div>
+
+                @if (productImages != null && productImages.Count > 1)
+                {
+                    <div class="d-flex gap-2 justify-content-center flex-wrap mt-2">
+                        @foreach (var img in productImages)
+                        {
+                            <div class="thumb-wrapper @(mainImageUrl == img.ImagePath ? "active-thumb" : "")"
+                                 @onclick="() => mainImageUrl = img.ImagePath">
+                                <img src="@img.ImagePath" class="img-thumbnail"
+                                     style="width: 70px; height: 70px; cursor: pointer; object-fit: cover;" />
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+
+            <div class="col-md-6">
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb">
+                        <li class="breadcrumb-item text-muted">@categoryName</li>
+                        <li class="breadcrumb-item active">@product.Condition</li>
+                    </ol>
+                </nav>
+
+                <h1 class="display-5 fw-bold">@product.Name</h1>
+                @if (reviews.Any())
+                {
+                    <div class="mb-2 text-warning">
+                        @for (int i = 1; i <= 5; i++)
+                        {
+                            <span>@(i <= Math.Round(AverageRating) ? "★" : "☆")</span>
+                        }
+                        <span class="text-muted small ms-2">(@reviews.Count reviews)</span>
+                    </div>
+                }
+                <p class="text-success fs-2 fw-bold">@product.Price.ToString("N2") PLN</p>
+
+                <hr />
+
+                <div class="buy-section p-3 bg-light rounded shadow-sm">
+                    @if (product.StockQuantity > 0)
+                    {
+                        <div class="mb-3">
+                            <label for="quantity" class="form-label fw-bold">Select quantity:</label>
+                            <div class="d-flex align-items-center">
+                                <input type="number" id="quantity" class="form-control quantity-input"
+                                       @bind="selectedQuantity" min="1" max="@product.StockQuantity" style="width: 80px;" />
+                                <span class="ms-3 text-muted">Available: <b>@product.StockQuantity pcs.</b></span>
+                            </div>
+                        </div>
+
+                        <button class="btn btn-primary btn-lg w-100 shadow" @onclick="AddToCart">
+                            <i class="bi bi-cart-plus me-2"></i> Add to cart
+                        </button>
+                    }
+                    else
+                    {
+                        <div class="alert alert-danger mb-0 text-center fw-bold">
+                            Product out of stock.
+                        </div>
+                    }
+                </div>
+
+                <div class="product-description-box mt-4">
+                    <h5>Description:</h5>
+                    <p class="text-muted product-description-text">@product.Description</p>
+                </div>
+
+                <div class="seller-info mt-4 p-3 bg-white border rounded">
+                    <p class="mb-0 text-muted small">Seller:</p>
+                    <p class="mb-0 fw-bold">@sellerName</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-5 mb-5 pb-5">
+            <h3 class="mb-4">Customer Reviews (@reviews.Count)</h3>
+
+
+            @if (SharedState.UserId > 0)
+            {
+                <div class="card p-4 mb-4 shadow-sm border-0 bg-light">
+                    <h5 class="mb-3">Add a Review</h5>
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label fw-bold">Rating</label>
+                            <select @bind="newReview.Rating" class="form-select">
+                                <option value="5">5 - Excellent</option>
+                                <option value="4">4 - Good</option>
+                                <option value="3">3 - Average</option>
+                                <option value="2">2 - Poor</option>
+                                <option value="1">1 - Terrible</option>
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <textarea @bind="newReview.Comment" class="form-control" rows="3" placeholder="What do you think about this product?"></textarea>
+                        </div>
+                        <div class="col-12 text-end">
+                            <button class="btn btn-success px-5" @onclick="SubmitReview">Post Review</button>
+                        </div>
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-info shadow-sm mb-4">
+                    Please <a href="/login" class="fw-bold">login</a> to leave a review.
+                </div>
+            }
+
+
+            <div class="list-group shadow-sm">
+                @if (!reviews.Any())
+                {
+                    <div class="list-group-item p-4 text-center text-muted bg-white">
+                        No reviews yet. Be the first to share your opinion!
+                    </div>
+                }
+                else
+                {
+                    @foreach (var rev in reviews)
+                    {
+                        <div class="list-group-item p-4 bg-white shadow-sm mb-2 rounded">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="mb-0 fw-bold">@(rev.Customer?.FirstName ?? "User")</h6>
+                                    <div class="text-warning">
+                                        @for (int i = 1; i <= 5; i++)
+                                        {
+                                            <span>@(i <= rev.Rating ? "★" : "☆")</span>
+                                        }
+                                    </div>
+                                </div>
+
+                                <div class="d-flex align-items-center">
+                                    @if (currentUserRole == "Admin")
+                                    {
+                                        <div class="admin-controls ms-3">
+                                            <button class="btn btn-sm btn-outline-danger me-2" @onclick="() => DeleteReview(rev.ReviewId)">
+                                                <i class="bi bi-trash"></i> Delete
+                                            </button>
+                                            <button class="btn btn-sm btn-danger" @onclick="() => BanUser(rev.CustomerId)">
+                                                <i class="bi bi-person-x"></i> Ban & Clean
+                                            </button>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                            <p class="mt-2 mb-0">@rev.Comment</p>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public int Id { get; set; }
+    private Product? product;
+    private string sellerName = "";
+    private string categoryName = "";
+    private int selectedQuantity = 1;
+    private string mainImageUrl = "/uploads/placeholder.jpg";
+    private List<ProductImage> productImages = new();
+    private List<Review> reviews = new();
+    private Review newReview = new Review { Rating = 5 };
+    private double AverageRating => reviews.Any() ? reviews.Average(r => r.Rating) : 0;
+    private string currentUserRole = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        product = await DB.Products.AsNoTracking()
+            .FirstOrDefaultAsync(p => p.ProductId == Id);
+
+        if (product != null)
+        {
+            var cat = await DB.Categories.AsNoTracking()
+                .FirstOrDefaultAsync(c => c.CategoryId == product.CategoryId);
+            categoryName = cat?.Name ?? "Unknown";
+
+
+            var seller = await DB.Customers.AsNoTracking()
+                .FirstOrDefaultAsync(c => c.CustomerId == product.SellerId);
+            sellerName = seller?.FirstName ?? "Unknown Seller";
+
+            await LoadReviews();
+
+            if (SharedState.UserId > 0)
+            {
+                var user = await DB.Customers.AsNoTracking()
+                    .FirstOrDefaultAsync(c => c.CustomerId == SharedState.UserId);
+                currentUserRole = user?.Role ?? "";
+            }
+        }
+    }
+
+    private async Task LoadReviews()
+    {
+        reviews = await DB.Reviews
+            .Include(r => r.Customer)
+            .Where(r => r.ProductId == Id)
+            .OrderByDescending(r => r.CreatedAt)
+            .ToListAsync();
+    }
+
+    private async Task SubmitReview()
+    {
+        if (SharedState.UserId <= 0) return;
+        if (string.IsNullOrWhiteSpace(newReview.Comment)) return;
+
+        newReview.ProductId = Id;
+        newReview.CustomerId = SharedState.UserId;
+        newReview.CreatedAt = DateTime.Now;
+
+        DB.Reviews.Add(newReview);
+        await DB.SaveChangesAsync();
+
+        newReview = new Review { Rating = 5, Comment = "" };
+        await LoadReviews();
+    }
+
+    private async Task AddToCart()
+    {
+        if (SharedState.UserId <= 0)
+        {
+            Navigation.NavigateTo("/login");
+            return;
+        }
+
+        if (product != null && selectedQuantity > 0)
+        {
+            var existingItem = await DB.CartItems
+                .FirstOrDefaultAsync(c => c.ProductId == product.ProductId && c.CustomerId == SharedState.UserId);
+
+            if (existingItem != null)
+            {
+                existingItem.Quantity += selectedQuantity;
+            }
+            else
+            {
+                var newItem = new CartItems
+                {
+                    CustomerId = SharedState.UserId,
+                    ProductId = product.ProductId,
+                    Quantity = selectedQuantity,
+                    DateAdded = DateTime.Now
+                };
+                DB.CartItems.Add(newItem);
+            }
+
+            await DB.SaveChangesAsync();
+            Navigation.NavigateTo("/cart");
+        }
+    }
+
+    private async Task DeleteReview(int reviewId)
+    {
+        var review = await DB.Reviews.FindAsync(reviewId);
+        if (review != null)
+        {
+            DB.Reviews.Remove(review);
+            await DB.SaveChangesAsync();
+            await LoadReviews(); 
+        }
+    }
+    private async Task BanUser(int customerId)
+    {
+        var user = await DB.Customers.FirstOrDefaultAsync(c => c.CustomerId == customerId);
+        if (user != null)
+        {
+
+            user.IsBanned = true;
+
+
+            var userReviews = await DB.Reviews.Where(r => r.CustomerId == customerId).ToListAsync();
+
+
+            DB.Reviews.RemoveRange(userReviews);
+
+            await DB.SaveChangesAsync();
+            await LoadReviews(); 
+        }
+    }
+
+
+
+    private void GoBack() => Navigation.NavigateTo("/products");
+}

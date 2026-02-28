@@ -1,135 +1,211 @@
 ﻿@page "/products"
 @rendermode InteractiveServer
+@using InterfejsPrototyp.Other
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@using Microsoft.EntityFrameworkCore
+@inject ProtectedSessionStorage SessionStorage
+@inject SharedStateService SharedState
 @inject NavigationManager Navigation
+@inject ProjectDbContext DB
+
 
 <PageTitle>Products</PageTitle>
 <div class="background">
-<header class="header-section">
-    <div class="header-left">
+
+
+    <header class="header-section">
+        <div class="header-left">
             <div class="header-logo" @onclick="GoToHome">
+            </div>
+            <div class="search-bar">
+                <input type="text" placeholder="Search your product">
+                <button type="button" class="search-button" @onclick="LoadProducts">Search</button>
+            </div>
         </div>
-        <div class="search-bar">
-            <input type="text" placeholder="Szukany produkt...">
-            <button type="button" class="search-button" @onclick="GoToProducts">Szukaj</button>
+        <div class="header-right">
+            @if (SharedState.IsLoggedIn)
+            {
+                <div class="user-dropdown-container">
+                    <div class="dropdown-trigger" @onclick="ToggleDropdown">
+                        Witaj, <b>@SharedState.UserName</b>! <span class="arrow">▼</span>
+                    </div>
+
+                    @if (isDropdownOpen)
+                    {
+                        <div class="dropdown-menu">
+                            <button class="dropdown-item" @onclick="GoToProfile">Profile</button>
+                            <hr class="dropdown-divider" />
+                            <button class="dropdown-item logout" @onclick="HandleLogout">Log out</button>
+                        </div>
+                    }
+                </div>
+                <button class="category-button" @onclick="GoToAddProducts">Add offer</button>
+            }
+            else
+            {
+                <button class="auth-button" @onclick="GoToLogin">Log in</button>
+            }
         </div>
-    </div>
-    <div class="header-right">
-            <button class="auth-button" @onclick="Settings">Ustawienia</button>
-        <button class="auth-button">Wyloguj</button>
-    </div>
-</header>
+        <div class="cart-container" @onclick="GoToCart">
+            <i class="bi bi-cart3"></i>
+            @if (TotalItemsInCart > 0)
+            {
+                <span class="cart-badge">@TotalItemsInCart</span>
+            }
+            else
+            {
+                <span class="cart-count-zero">0</span>
+            }
+        </div>
+    </header>
 
     <main class ="main-content">
 
         <aside class="sidebar">
-            <h5>Filtrowanie</h5>
+            <h5>Filters</h5>
 
+            <h6>Condition</h6>
             <div class="filter-option">
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="" id="Filtr">
-                    <label class="form-check-label" for="Filtr">
-                        Filtr
-                    </label>
-                </div>
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="" id="Filtr">
-                    <label class="form-check-label" for="Filtr">
-                        Filtr
-                    </label>
-                </div>
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="" id="Filtr">
-                    <label class="form-check-label" for="Filtr">
-                        Filtr
-                    </label>
-                </div>
+                <select class="form-select" value="@selectedCondition" @onchange="OnConditionChanged">
+                    <option value="">All</option>
+                    <option value="New" selected="@(selectedCondition == "New")">New</option>
+                    <option value="Used" selected="@(selectedCondition == "Used")">Used</option>
+                </select>
             </div>
 
+            <h6>Price</h6>
             <div class="filter-option">
-                <label for="priceRange" class="form-label">Przedzial cenowy:</label>
-                <input type="range" class="form-range" min="0" max="100" step="1" id="priceRange" value="50">
+                <label for="minPriceRange" class="form-label">Min price: <b>@MinPrice zł</b></label>
+                <input type="range" class="form-range" min="0" max="@AbsoluteMaxPrice" step="100"
+                       id="minPriceRange" @bind="MinPrice" @bind:event="oninput" @onchange="LoadProducts">
+
+                <label for="maxPriceRange" class="form-label">Max price: <b>@PriceLimit zł</b></label>
+                <input type="range" class="form-range" min="0" max="@AbsoluteMaxPrice" step="100"
+                       id="maxPriceRange" @bind="PriceLimit" @bind:event="oninput" @onchange="LoadProducts">
             </div>
 
-            <h6>Filtr2</h6>
+
+            <h6>Category</h6>
             <div class="filter-option">
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="" id="option1">
-                    <label class="form-check-label" for="option1">
-                        Filtr
-                    </label>
-                </div>
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="" id="option2">
-                    <label class="form-check-label" for="option2">
-                        Filtr
-                    </label>
-                </div>
-                <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="" id="option3">
-                    <label class="form-check-label" for="option3">
-                        Filtr
-                    </label>
-                </div>
+                <select class="form-select" value="@CategoryQuery" @onchange="OnCategoryChanged">
+                    <option value="">All</option>
+                    @if (AvailableCategories != null)
+                    {
+                        @foreach (var cat in AvailableCategories)
+                        {
+                            <option value="@cat">@cat</option>
+                        }
+                    }
+                </select>
             </div>
+
+            
+
+            <button class="btn btn-outline-danger btn-sm w-100 mt-3" @onclick="ResetFilters">Reset filters</button>
         </aside>
 
         <div class="product-list-panel">
             <div class="sort-bar">
-                <label for="sortby">Sortuj po:</label>
-                <select class="form-select" id="sortby">
-                    <option value="1">Opcja 1</option>
-                    <option value="2">Opcja 2</option>
-                    <option value="3">Opcja 3</option>
+                <select class="form-select" id="sortby" @onchange="OnSortChanged">
+                    <option value="newest">Newest</option>
+                    <option value="price_asc">Price: lowest</option>
+                    <option value="price_desc">Price: highest</option>
+                    <option value="name_asc">Name: A-Z</option>
                 </select>
             </div>
 
 
+
+
+
+
             <div class="row">
-                <div class="col">
-                    
-                        <div class="img-holder">
-                            <i class=""></i>
+                @if (DisplayProducts == null)
+                {
+                    <p>Loading products...</p>
+                }
+                else if (!DisplayProducts.Any())
+                {
+                    <div class="col-12 text-center mt-5">
+                        <p>No products matched your criteria.</p>
+                        <button class="btn btn-link" @onclick="ResetFilters">Reset filters</button>
+                    </div>
+                }
+                else
+                {
+                    @foreach (var prod in DisplayProducts)
+                    {
+                        <div class="col-12 mb-3">
+                            <div class="product-item-card-horizontal shadow-sm">
+                                <div class="img-holder-horizontal">
+                                    <img src="@prod.ImageUrl"
+                                         alt="@prod.Name"
+                                         loading="lazy"
+                                         onerror="this.src='/uploads/placeholder.jpg';" />
+                                </div>
+
+                                <div class="product-content-horizontal">
+                                    <div class="product-main-details">
+                                        <h5 class="product-name">@prod.Name</h5>
+                                        <p class="product-condition">Condition: <b>@prod.Condition</b></p>
+                                        <p class="product-seller">Seller: @prod.SellerName</p>
+                                    </div>
+
+                                    <div class="product-action-details">
+                                        <p class="product-price">@prod.Price.ToString("N2") zł</p>
+
+                                        @if (prod.StockQuantity > 0)
+                                        {
+                                            <p class="stock-info text-success">Available: <b>@prod.StockQuantity</b> pcs</p>
+                                        }
+                                        else
+                                        {
+                                            <p class="out-of-stock">Out of stock</p>
+                                        }
+
+                                        <button class="btn btn-blue-custom w-100" @onclick="() => GoToDetails(prod.ProductId)">
+                                            View Details
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div>
-                            <h5>TYTUŁ</h5>
-                            <p>KRÓTKI OPIS I CENA</p>
-                        </div>
-                    
-                </div>
-                <div class="col">
-                        <div class="img-holder">
-                            <i class=""></i>
-                        </div>
-                        <div>
-                            <h5>TYTUŁ</h5>
-                            <p>KRÓTKI OPIS I CENA</p>
-                        </div>
-                    
-                </div>
-                <div class="col">
-                    
-                        <div class="img-holder">
-                            <i class=""></i>
-                        </div>
-                        <div>
-                            <h5>TYTUŁ</h5>
-                            <p>KRÓTKI OPIS I CENA</p>
-                        </div>
-                    
-                </div>
+                    }
+                }
             </div>
 
 
-            <nav aria-label="Page navigation" class="d-flex justify-content-center mt-5">
+
+
+
+            <nav aria-label="Page navigation" class="pagination-section">
                 <ul class="pagination">
-                    <li class="page-item active"><a class="page-link" >1</a></li>
-                    <li class="page-item"><a class="page-link" >2</a></li>
-                    <li class="page-item"><a class="page-link" >3</a></li>
-                    <li class="page-item"><a class="page-link" >...</a></li>
-                    <li class="page-item"><a class="page-link" >10</a></li>
-                    <li class="page-item"><a class="page-link" >11</a></li>
+                    
+                    <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                        <button class="page-link" @onclick="() => ChangePage(1)">&laquo;</button>
+                    </li>
+                    <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                        <button class="page-link" @onclick="() => ChangePage(currentPage - 1)">&lsaquo;</button>
+                    </li>
+
+
+                    @for (int i = 1; i <= totalPages; i++)
+                    {
+                        var pageNumber = i;
+                        <li class="page-item @(pageNumber == currentPage ? "active" : "")">
+                            <button class="page-link" @onclick="() => ChangePage(pageNumber)">@pageNumber</button>
+                        </li>
+                    }
+
+
+                    <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                        <button class="page-link" @onclick="() => ChangePage(currentPage + 1)">&rsaquo;</button>
+                    </li>
                 </ul>
             </nav>
+
+
+
         </div>
     </main>
 
@@ -139,19 +215,263 @@
     Footer
 </footer>
 </div>
+
+
+
+
+
+
+
+
+
 @code {
-    private void GoToProducts()
+
+    [Parameter][SupplyParameterFromQuery(Name = "category")] public string? CategoryQuery { get; set; }
+    [Parameter][SupplyParameterFromQuery(Name = "search")] public string? SearchFromUrl { get; set; }
+    private void GoToDetails(int id) => Navigation.NavigateTo($"/product/{id}");
+    private void GoToAddProducts() => Navigation.NavigateTo("/addproducts");
+    private string? selectedCondition;
+    private string? selectedCategory;
+    private List<string> AvailableCategories = new();
+    private string SearchQuery = "";
+    private int PriceLimit;
+    private int AbsoluteMaxPrice;
+    private int MinPrice = 0;
+    private List<Product>? FilteredProducts;
+    private bool isDropdownOpen = false;
+    private List<ProductDisplayViewModel>? DisplayProducts;
+    private string sortBy = "newest";
+    private int currentPage = 1;
+    private int pageSize = 5;
+    private int totalProducts = 0;
+    private List<CartItems> Basket = new();
+    private int totalPages => (int)Math.Ceiling((double)totalProducts / pageSize);
+    private void GoToCart() => Navigation.NavigateTo("/cart");
+
+
+
+    private async Task ChangePage(int page)
     {
+        if (page < 1 || page > totalPages) return;
+        currentPage = page;
+        await LoadProducts();
+        StateHasChanged();
+    }
+
+
+
+    private async Task OnSortChanged(ChangeEventArgs e)
+    {
+        sortBy = e.Value?.ToString() ?? "newest";
+        await LoadProducts();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        SharedState.OnChange += StateHasChanged;
+        var maxInDb = await DB.Products.MaxAsync(p => (decimal?)p.Price) ?? 0;
+        AbsoluteMaxPrice = (int)Math.Ceiling(maxInDb);
+        PriceLimit = AbsoluteMaxPrice;
+        AvailableCategories = await DB.Categories
+            .Select(c => c.Name)
+            .ToListAsync();
+
+
+        await LoadProducts();       
+        await UpdateCartCounter();
+
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        SearchQuery = !string.IsNullOrWhiteSpace(SearchFromUrl) ? SearchFromUrl : "";
+
+        currentPage = 1;
+
+        await LoadProducts();
+        StateHasChanged();
+    }
+
+    private async Task LoadProducts()
+    {
+        var query = from p in DB.Products
+                    join c in DB.Customers on p.SellerId equals c.CustomerId
+                    join cat in DB.Categories on p.CategoryId equals cat.CategoryId 
+                    select new ProductDisplayViewModel
+                    {
+                        ProductId = p.ProductId,
+                        Name = p.Name,
+                        Description = p.Description,
+                        Price = p.Price,
+                        Category = cat.Name, 
+                        Condition = p.Condition,
+                        SellerName = c.FirstName + " " + c.LastName,
+                        ImageUrl = p.ImageUrl,
+                        StockQuantity = p.StockQuantity
+                    };
+
+
+        if (!string.IsNullOrWhiteSpace(CategoryQuery))
+        {
+            var normalizedQuery = CategoryQuery.Trim().ToLower();
+            query = query.Where(p => p.Category.ToLower() == normalizedQuery);
+        }
+
+
+        if (!string.IsNullOrWhiteSpace(SearchQuery))
+            query = query.Where(p => p.Name.Contains(SearchQuery) || p.Description.Contains(SearchQuery));
+
+        query = query.Where(p => p.Price >= (decimal)MinPrice && p.Price <= (decimal)PriceLimit);
+
+        if (!string.IsNullOrEmpty(selectedCondition))
+        {
+            query = query.Where(p => p.Condition == selectedCondition);
+        }
+        totalProducts = await query.CountAsync();
+        query = sortBy switch
+        {
+            "price_asc" => query.OrderBy(p => p.Price),
+            "price_desc" => query.OrderByDescending(p => p.Price),
+            "name_asc" => query.OrderBy(p => p.Name),
+            "newest" => query.OrderByDescending(p => p.ProductId),
+            _ => query.OrderByDescending(p => p.ProductId)
+        };
+        DisplayProducts = await query
+        .Skip((currentPage - 1) * pageSize) 
+        .Take(pageSize)                     
+        .ToListAsync();
+    }
+
+    private async Task OnConditionChanged(ChangeEventArgs e)
+    {
+        selectedCondition = e.Value?.ToString();
+        if (string.IsNullOrEmpty(selectedCondition)) selectedCondition = null;
+        currentPage = 1;
+        await LoadProducts();
+    }
+
+    private async Task OnCategoryChanged(ChangeEventArgs e)
+    {
+        CategoryQuery = e.Value?.ToString();
+        currentPage = 1; 
+        await LoadProducts();
+    }
+
+    public class ProductDisplayViewModel
+    {
+        public int ProductId { get; set; }
+        public string Name { get; set; } = "";
+        public string? Description { get; set; }
+        public decimal Price { get; set; }
+        public string Category { get; set; } = "";
+        public string Condition { get; set; } = "";
+        public string SellerName { get; set; } = "";
+        public string ImageUrl { get; set; } = "";
+        public int StockQuantity { get; set; }
+    }
+
+    private void ResetFilters()
+    {
+        SearchQuery = "";
+        MinPrice = 0;
+        PriceLimit = AbsoluteMaxPrice;
+        selectedCondition = null;
+        CategoryQuery = null; 
+        SearchFromUrl = null;
+        currentPage = 1;
 
         Navigation.NavigateTo("/products");
     }
-    private void Settings()
-    {
 
-        Navigation.NavigateTo("/settings");
-    }
-    private void GoToHome()
+
+    private void GoToHome() => Navigation.NavigateTo("/");
+    private void GoToProfile() => Navigation.NavigateTo("/profile");
+    private void ToggleDropdown()
     {
-        Navigation.NavigateTo("/"); 
+        isDropdownOpen = !isDropdownOpen;
+        StateHasChanged(); 
+    }
+
+    private void GoToLogin()
+    {
+        var currentUri = Navigation.ToBaseRelativePath(Navigation.Uri);
+        Navigation.NavigateTo($"/login?ReturnUrl={Uri.EscapeDataString(currentUri)}");
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var resultId = await SessionStorage.GetAsync<int>("userId");
+            var resultName = await SessionStorage.GetAsync<string>("userName");
+
+            if (resultId.Success && resultName.Success && !SharedState.IsLoggedIn)
+            {
+                SharedState.Login(resultId.Value, resultName.Value!);
+                StateHasChanged();
+            }
+        }
+    }
+    private async Task AddToCart(ProductDisplayViewModel product)
+    {
+        var currentUserId = SharedState.UserId;
+
+        if (currentUserId <= 0)
+        {
+            Navigation.NavigateTo("/login");
+            return;
+        }
+
+        var existingItem = await DB.CartItems
+            .FirstOrDefaultAsync(c => c.ProductId == product.ProductId && c.CustomerId == currentUserId);
+
+        if (existingItem != null)
+        {
+            existingItem.Quantity++;
+        }
+        else
+        {
+            var newItem = new CartItems
+            {
+                CustomerId = currentUserId,
+                ProductId = product.ProductId,
+                Quantity = 1,
+                DateAdded = DateTime.Now
+            };
+            DB.CartItems.Add(newItem);
+        }
+
+        await DB.SaveChangesAsync();
+        await UpdateCartCounter();
+    }
+    private int TotalItemsInCart;
+
+    private async Task UpdateCartCounter()
+    {
+        if (SharedState.UserId > 0)
+        {
+            TotalItemsInCart = await DB.CartItems
+                .Where(c => c.CustomerId == SharedState.UserId)
+                .SumAsync(c => (int?)c.Quantity) ?? 0;
+        }
+        else
+        {
+            TotalItemsInCart = 0;
+        }
+    }
+
+
+    private async Task HandleLogout()
+    {
+        isDropdownOpen = false;
+        SharedState.Logout();
+        await SessionStorage.DeleteAsync("userId");
+        await SessionStorage.DeleteAsync("userName");
+        Navigation.NavigateTo("/", forceLoad: true);
+    }
+
+    public void Dispose()
+    {
+        SharedState.OnChange -= StateHasChanged;
     }
 }

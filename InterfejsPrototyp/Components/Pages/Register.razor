@@ -1,0 +1,166 @@
+﻿@page "/register"
+@using InterfejsPrototyp.Other
+@using Microsoft.EntityFrameworkCore
+@using BCrypt.Net
+@using Microsoft.AspNetCore.Components.Forms
+@rendermode InteractiveServer
+@inject NavigationManager Navigation
+@inject ProjectDbContext DB
+
+<PageTitle>Register</PageTitle>
+
+
+<header class="header-section">
+    <div class="header-left">
+        <div class="header-logo" @onclick="GoToHome">
+        </div>
+    </div>
+</header>
+
+<div class="register-container">
+    <h2>New client registration</h2>
+
+    @if (registrationSuccess)
+    {
+        <div class="alert alert-success-custom" role="alert">
+            <div class="spinner-border spinner-border-sm" role="status"></div>
+            <span><strong>Success!</strong> Account created. Redirecting to login page...</span>
+        </div>
+    }
+
+    <hr>
+
+    <EditForm Model="@RegistrationModel" OnValidSubmit="@HandleRegistration" FormName="RegistrationForm">
+        <DataAnnotationsValidator />
+        
+
+        <div class="form-columns-wrapper">
+
+            <div class="form-column personal-data-column">
+                <h3>Personal and contact data</h3>
+                <hr>
+
+                <div class="form-field"><label for="firstNameInput">First name</label><InputText id="firstNameInput" @bind-Value="RegistrationModel.FirstName" placeholder="Enter your first name" class="form-control" /><ValidationMessage For="@(() => RegistrationModel.FirstName)" /></div>
+                <div class="form-field"><label for="lastNameInput">Last name</label><InputText id="lastNameInput" @bind-Value="RegistrationModel.LastName" placeholder="Enter your last name" class="form-control" /><ValidationMessage For="@(() => RegistrationModel.LastName)"/></div>
+                <div class="form-field"><label for="dateOfBirthInput">Date of birth</label><InputDate id="dateOfBirthInput" @bind-Value="RegistrationModel.DateOfBirth" class="form-control" /><ValidationMessage For="@(() => RegistrationModel.DateOfBirth)" /></div>
+                <div class="form-field"><label for="phoneNumberInput">Phone number</label><InputText id="phoneNumberInput" @bind-Value="RegistrationModel.PhoneNumber" placeholder="+48 XXXX XXXXXX" class="form-control" /><ValidationMessage For="@(() => RegistrationModel.PhoneNumber)" /></div>
+            </div>
+
+            <div class="form-column adress-data-column">
+                <h3>Address</h3>
+                <hr>
+
+                <div class="form-field"><label for="streetAddressInput">Street address</label><InputText id="streetAddressInput" @bind-Value="RegistrationModel.StreetAddress" placeholder="Street" class="form-control" /><ValidationMessage For="@(() => RegistrationModel.StreetAddress)" /></div>
+                <div class="form-field"><label for="cityInput">City</label><InputText id="cityInput" @bind-Value="RegistrationModel.City" placeholder="City" class="form-control" /><ValidationMessage For="@(() => RegistrationModel.City)" /></div>
+                <div class="form-field"><label for="zipCodeInput">Postal code</label><InputText id="zipCodeInput" @bind-Value="RegistrationModel.PostalCode" placeholder="Postal Code" class="form-control" /><ValidationMessage For="@(() => RegistrationModel.PostalCode)" /></div>
+
+                <div class="form-field">
+                    <label for="countrySelect">Country</label>
+
+                    <InputSelect id="countrySelect" @bind-Value="RegistrationModel.SelectedCountryName" class="form-control">
+                        <option value="">Select a country...</option>
+                        @foreach (var country in Countries)
+                        {
+                            <option value="@country.Name">@country.Name</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="@(() => RegistrationModel.SelectedCountryName)" />
+                </div>
+            </div>
+
+            <div class="form-column password-data-column">
+                <h3>Password and Agreements</h3>
+                <hr>
+
+                <div class="form-field"><label for="emailInput">Email</label><InputText id="emailInput" @bind-Value="RegistrationModel.Email" placeholder="Your E-mail address" class="form-control" /><ValidationMessage For="@(() => RegistrationModel.Email)" /></div>
+                <div class="form-field"><label for="passwordInput">Password</label><InputText type="password" id="passwordInput" @bind-Value="RegistrationModel.Password" placeholder="Choose a secure password" class="form-control" /><ValidationMessage For="@(() => RegistrationModel.Password)" /></div>
+                <div class="form-field"><label for="confirmPasswordInput">Confirm password</label><InputText type="password" id="confirmPasswordInput" @bind-Value="RegistrationModel.ConfirmPassword" placeholder="Repeat password" class="form-control" /><ValidationMessage For="@(() => RegistrationModel.ConfirmPassword)" /></div>
+
+                <div class="form-field legal-consent">
+                    <InputCheckbox id="termsAgreement" @bind-Value="RegistrationModel.AcceptsTerms" />
+                    <label for="termsAgreement" class="checkbox-label">I accept the terms and conditions and privacy policy.</label>
+                </div>
+                <ValidationMessage For="@(() => RegistrationModel.AcceptsTerms)" />
+            </div>
+        </div>
+
+        <button type="submit" class="register-button">Register</button>
+
+        <a class="login-link" href="/login">Already have an account? Login here.</a>
+
+    </EditForm>
+</div>
+
+
+<footer class="footer-section">
+    Footer
+</footer>
+
+@code {
+    private bool registrationSuccess = false;
+    private void GoToHome()
+    {
+        Navigation.NavigateTo("/");
+    }
+
+    private string SelectedCountry { get; set; } = "Poland";
+    private List<Country> Countries = new();
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCountries();
+        RegistrationModel.DateOfBirth = new DateTime(2000, 1, 1);
+    }
+    private async Task LoadCountries()
+    {
+        Countries = await DB.Countries.ToListAsync();
+    }
+    private RegisterViewModel RegistrationModel { get; set; } = new RegisterViewModel();
+    private async Task HandleRegistration()
+    {
+        try
+        {
+           
+            string hashedPassword = BCrypt.HashPassword(RegistrationModel.Password, 12);
+
+            
+            var newAddress = new Address
+            {
+                StreetAddress = RegistrationModel.StreetAddress,
+                City = RegistrationModel.City,
+                PostalCode = RegistrationModel.PostalCode,
+                CountryName = RegistrationModel.SelectedCountryName
+            };
+
+         
+            var newCustomer = new Customer
+            {
+                FirstName = RegistrationModel.FirstName,
+                LastName = RegistrationModel.LastName,
+                DateOfBirth = RegistrationModel.DateOfBirth,
+                Email = RegistrationModel.Email,
+                PhoneNumber = RegistrationModel.PhoneNumber,
+                AcceptsTerms = RegistrationModel.AcceptsTerms,
+
+                
+                PasswordHash = hashedPassword,
+
+               
+                Addresses = new List<Address> { newAddress }
+            };
+
+            
+            DB.Customers.Add(newCustomer);
+            await DB.SaveChangesAsync();
+
+           
+            Navigation.NavigateTo("/login?registered=true");
+        }
+        catch (Exception ex)
+        {
+
+            Console.WriteLine($"Registration Error: {ex.Message}");
+
+        }
+    }
+
+}
