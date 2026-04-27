@@ -1,5 +1,6 @@
 using InterfejsPrototyp;
 using InterfejsPrototyp.Components;
+using InterfejsPrototyp.Other;
 using Microsoft.AspNetCore.Connections;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,7 +12,7 @@ builder.Services.AddRazorComponents()
 builder.Services.AddDbContext<ProjectDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-
+builder.Services.AddScoped<IPaymentService, MockPaymentService>();
 
 builder.Services.AddScoped<SharedStateService>();
 
@@ -28,7 +29,6 @@ app.UseHttpsRedirection();
 
 app.UseStaticFiles();
 app.UseAntiforgery();
-app.UseStaticFiles(); 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
 

@@ -1,17 +1,17 @@
 ﻿:root {
     font-family: 'Montserrat';
     background-color: #F1ECEA;
-    color: #ff0000;
 }
 
+.header-section, .footer-section {
+    padding: 1rem 2rem;
+    background: #0B7615; 
+    color: #fff;
+}
 .header-section {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem 2rem;
-    background-color: #0B7615;
-
-    color: #FFFFFF;
 }
 
 .header-left {
@@ -23,18 +23,14 @@
 .header-logo {
     width: 100px;
     height: 100px;
-    background-color: #e0e0e0;
-    border-radius: 0.5rem;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    color: #a0a0a0;
+    background: #e0e0e0;
+    border-radius: 8px;
+    cursor: pointer;
 }
+
     .header-logo:hover {
         transform: translateY(-3px);
-        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
     }
-
 .auth-button {
     border-radius: 0.5rem;
     display: inline-flex;
@@ -49,12 +45,12 @@
     .auth-button:hover {
         background-color: #16325A;
     }
+
 .main-content-area {
-    flex-grow: 1;
     padding: 2rem;
-    display: flex; 
-    justify-content: center; 
-    align-items: flex-start; 
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .options-grid-container {
@@ -67,34 +63,72 @@
 }
 
 .option-block {
-    background-color: var(--text-color-light); 
-    border: 1px solid rgba(0, 0, 0, 0.1); 
-    border-radius: 0.5rem; 
-    padding: 2rem; 
+    background: #fff;
+    border: 1px solid rgba(0,0,0,0.1);
+    border-radius: 0.5rem;
+    padding: 2rem;
     text-align: center;
-    font-size: 1.2rem;
-    font-weight: 500;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    font-weight: 600;
+    color: #224470;
     cursor: pointer;
 }
 
     .option-block:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+        transform: translateY(-4px);
     }
 
+.delete-btn {
+    color: #dc3545 !important;
+}
+    .delete-btn:hover {
+        background: #fff5f5;
+    }
 
- .footer-section {
-    padding: 1.5rem 2rem;
-    background-color: #0B7615;
-    text-align: left;
-    color: #FFFFFF;
-    font-size: 0.9rem;
+.access-denied-container {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
-.dropdown-menu {
-    display: block; 
-    position: absolute;
-    z-index: 9999; 
-    background: white;
-    border: 1px solid #ccc;
+
+.access-card {
+    background: #fce4e4;
+    border: 1px solid #f5c6cb;
+    border-radius: 8px;
+    padding: 25px;
+    width: 450px;
+    min-width: 300px;
+    max-width: 500px;
+
+    text-align: center;
 }
+
+    .access-card h2 {
+        color: #721c24;
+        margin-bottom: 15px;
+    }
+
+.access-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 20px;
+}
+
+.btn-login, .btn-home {
+    padding: 8px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    border: 1px solid #ddd;
+    transition: 0.2s;
+}
+
+.btn-login {
+    background: #dc3545;
+    color: #fff;
+    border: none;
+}
+
+    .btn-login:hover {
+        background: #c82333;
+    }

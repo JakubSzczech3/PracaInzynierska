@@ -25,7 +25,7 @@
                 <strong>Success!</strong> Your account is ready. Please log in below.
             </div>
         }
-        <h2 style="color: var(--text-color-dark);">Login to Your Account</h2>
+        <h2 style="color: var(--text-color-dark);">Login to your account</h2>
         <hr />
 
         <EditForm Model="@LoginModel" OnValidSubmit="HandleLogin">
@@ -51,8 +51,8 @@
             <button type="submit" class="login-button">Login</button>
         </EditForm>
 
-        <div style="margin-top: 1rem; text-align: center;">
-            <p style="color: var(--text-color-dark);">Don't have an account? <a href="/register" style="color: #224470; font-weight: bold;">Register here</a>.</p>
+        <div class="auth-footer">
+            <p>Don't have an account? <a href="/register" class="auth-link">Register here</a>.</p>
         </div>
     </div>
 </div>
@@ -66,7 +66,7 @@
 
 
 @code {
-    private void GoToHome() => Navigation.NavigateTo("/");
+    private void GoToHome() => Navigation.NavigateTo("/", forceLoad: true);
     private void GoToRegister() => Navigation.NavigateTo("/register");
 
     [Parameter]
@@ -107,6 +107,12 @@
 
         if (user != null && BCrypt.Net.BCrypt.Verify(LoginModel.Password, user.PasswordHash))
         {
+            if (user.IsBanned)
+            {
+                ErrorMessage = "Your account has been permanently banned.";
+                return; 
+            }
+
             SharedState.Login(user.CustomerId, user.FirstName);
             await SessionStorage.SetAsync("userId", user.CustomerId);
             await SessionStorage.SetAsync("userName", user.FirstName);

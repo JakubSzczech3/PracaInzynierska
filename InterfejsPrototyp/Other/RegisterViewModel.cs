@@ -43,7 +43,7 @@ namespace InterfejsPrototyp.Other
         public string SelectedCountryName { get; set; } 
 
         [Required(ErrorMessage = "Password is required.")]
-        [MinLength(6, ErrorMessage = "Password must be longer than 6 characters.")]
+        [MinLength(6, ErrorMessage = "Password must be longer than 5 characters.")]
         public string Password { get; set; }
 
         [Compare("Password", ErrorMessage = "Passwords don't match.")]

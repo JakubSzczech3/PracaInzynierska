@@ -6,52 +6,105 @@
 @inject ProtectedSessionStorage SessionStorage
 
 
-<PageTitle>Profile</PageTitle>
+<PageTitle>Settings</PageTitle>
+
 
 <header class="header-section">
     <div class="header-left">
-        <div class="header-logo" @onclick="GoToHome">
+        <div class="header-logo" @onclick="GoToHome"></div>
+        <h1>Settings</h1>
+    </div>
+    @if (SharedState.UserId > 0)
+    {
+        <div class="header-right">
+            <span class="welcome-text"><b>@SharedState.UserName</b></span>
+            <button class="auth-button ms-3" @onclick="HandleLogout">Log out</button>
         </div>
-        <h1> Ustawienia </h1>
-    </div>
-    <div class="header-right">
-        <button class="auth-button" @onclick="HandleLogout" >Wyloguj</button>
-    </div>
+    }
 </header>
 
+
+
 <main class="main-content-area">
-    <div class="options-grid-container">
-        <div class="option-block" @onclick="GoToHistory">Historia zakupow</div>
-        <div class="option-block">OPTION</div>
-        <div class="option-block">OPTION</div>
-        <div class="option-block">OPTION</div>
-        <div class="option-block">OPTION</div>
+    @if (isChecking)
+    {
+        <div class="loader-container">
+            <p>Loading session</p>
+        </div>
+    }
+    else if (SharedState.UserId > 0)
+    {
+        <div class="options-grid-container">
+            <div class="option-block" @onclick="GoToChangeProducts">My products</div>
+            <div class="option-block" @onclick="GoToSoldProducts">Sold products</div>
+            <div class="option-block" @onclick="GoToPurchaseHistory">Purchase history</div>
+            <div class="option-block" @onclick="GoToAllReviews">Reviews</div>
+            <div class="option-block" @onclick="GoToChangeUserData">Change user data</div>
+            <div class="option-block delete-btn" @onclick="GoToDeleteAccount">Delete account</div>
+        </div>
 
 
-        <div class="option-block">OPTION</div>
-        <div class="option-block">OPTION</div>
-        <div class="option-block">OPTION</div>
-        <div class="option-block">OPTION</div>
-        <div class="option-block">OPTION</div>
+   
+    }
+    else
+    {
+    <div class="access-denied-container">
+        <div class="access-card">
+            <h2>Access Denied</h2>
+            <p>You must be logged in to access your profile and settings.</p>
+            <div class="access-actions">
+                <button class="btn-login" @onclick="GoToLogin">Sign In</button>
+                <button class="btn-home" @onclick="GoToHome">Back to Home</button>
+            </div>
+        </div>
     </div>
+    }
 </main>
-
-
 <footer class="footer-section">
     Footer
 </footer>
 @code {
-    private void GoToHome()
+    private void GoToHome() => Navigation.NavigateTo("/", forceLoad: true);
+    private void GoToPurchaseHistory() => Navigation.NavigateTo("/profile/view/purchase-history");
+    private void GoToSoldProducts() => Navigation.NavigateTo("/profile/view/sold-products");
+    private void GoToAllReviews() => Navigation.NavigateTo("/profile/view/my-reviews");
+    private void GoToChangeProducts() => Navigation.NavigateTo("/profile/view/my-products");
+    private void GoToChangeUserData() => Navigation.NavigateTo("/edit-profile");
+    private void GoToDeleteAccount() => Navigation.NavigateTo("/delete-account");
+    private void GoToLogin() => Navigation.NavigateTo("/login");
+    private bool isChecking = true;
+    private int loggedUserId;
+
+
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        Navigation.NavigateTo("/"); 
+        if (firstRender)
+        {
+            try
+            {
+                var result = await SessionStorage.GetAsync<int>("userId");
+
+                if (result.Success && result.Value > 0)
+                {
+                    var resultName = await SessionStorage.GetAsync<string>("userName");
+                    SharedState.Login(result.Value, resultName.Value ?? "User");
+                }
+                isChecking = false;
+                StateHasChanged();
+            }
+            catch
+            {
+                isChecking = false;
+                StateHasChanged();
+            }
+        }
     }
-    private void GoToHistory()
-    {
-        Navigation.NavigateTo("/history");
-    }
+
+
     private async Task HandleLogout()
     {
-        isDropdownOpen = false;
         SharedState.Logout();
         try
         {
@@ -61,12 +114,7 @@
         catch
         {
         }
+        Navigation.NavigateTo("/login", forceLoad: true);
     }
-    private bool isDropdownOpen = false;
 
-    private void ToggleDropdown()
-    {
-        isDropdownOpen = !isDropdownOpen;
-        StateHasChanged();
-    }
 }

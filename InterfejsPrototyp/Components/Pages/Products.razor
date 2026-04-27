@@ -23,31 +23,37 @@
                 <button type="button" class="search-button" @onclick="LoadProducts">Search</button>
             </div>
         </div>
-        <div class="header-right">
-            @if (SharedState.IsLoggedIn)
-            {
-                <div class="user-dropdown-container">
-                    <div class="dropdown-trigger" @onclick="ToggleDropdown">
-                        Witaj, <b>@SharedState.UserName</b>! <span class="arrow">▼</span>
-                    </div>
-
-                    @if (isDropdownOpen)
-                    {
-                        <div class="dropdown-menu">
-                            <button class="dropdown-item" @onclick="GoToProfile">Profile</button>
-                            <hr class="dropdown-divider" />
-                            <button class="dropdown-item logout" @onclick="HandleLogout">Log out</button>
+            <div class="header-right">
+                @if (SharedState.IsLoggedIn)
+                {
+                    <div class="user-dropdown-container">
+                        <div class="dropdown-trigger" @onclick="ToggleDropdown">
+                            Witaj, <b>@SharedState.UserName</b>! <span class="arrow">▼</span>
                         </div>
-                    }
+
+                        @if (isDropdownOpen)
+                        {
+                            <div class="dropdown-menu">
+                                <button class="dropdown-item" @onclick="GoToProfile">Profile</button>
+                                <hr class="dropdown-divider" />
+                                <button class="dropdown-item logout" @onclick="HandleLogout">Log out</button>
+                            </div>
+                        }
+                    </div>
+                    <button class="category-button" @onclick="GoToAddProducts">Add offer</button>
+                }
+                else
+                {
+                    <button class="auth-button" @onclick="GoToLogin">Log in</button>
+                }
+
+                <div class="cart-container" @onclick="GoToCart">
+                    <i class="bi bi-cart3"></i>
+                    <span class="@(TotalItemsInCart > 0 ? "cart-badge" : "cart-count-zero")">
+                        @TotalItemsInCart
+                    </span>
                 </div>
-                <button class="category-button" @onclick="GoToAddProducts">Add offer</button>
-            }
-            else
-            {
-                <button class="auth-button" @onclick="GoToLogin">Log in</button>
-            }
-        </div>
-        
+            </div>
     </header>
 
     <main class ="main-content">
@@ -132,7 +138,7 @@
                                     <img src="@prod.ImageUrl"
                                          alt="@prod.Name"
                                          loading="lazy"
-                                         onerror="this.src='/uploads/placeholder.jpg';" />
+                                             onerror=""/>
                                 </div>
 
                                 <div class="product-content-horizontal">
@@ -155,7 +161,7 @@
                                         }
 
                                         <button class="btn btn-blue-custom w-100" @onclick="() => GoToDetails(prod.ProductId)">
-                                            View Details
+                                            View details
                                         </button>
                                     </div>
                                 </div>
@@ -206,13 +212,6 @@
     Footer
 </footer>
 </div>
-
-
-
-
-
-
-
 </div>
 
 @code {
@@ -233,7 +232,7 @@
     private List<ProductDisplayViewModel>? DisplayProducts;
     private string sortBy = "newest";
     private int currentPage = 1;
-    private int pageSize = 5;
+    private int pageSize = 3;
     private int totalProducts = 0;
     private List<CartItems> Basket = new();
     private int totalPages => (int)Math.Ceiling((double)totalProducts / pageSize);
@@ -288,6 +287,7 @@
         var query = from p in DB.Products
                     join c in DB.Customers on p.SellerId equals c.CustomerId
                     join cat in DB.Categories on p.CategoryId equals cat.CategoryId 
+                    where p.IsActive == true && p.StockQuantity > 0
                     select new ProductDisplayViewModel
                     {
                         ProductId = p.ProductId,
@@ -365,17 +365,17 @@
     {
         SearchQuery = "";
         MinPrice = 0;
-        PriceLimit = AbsoluteMaxPrice;
+        PriceLimit = AbsoluteMaxPrice; 
         selectedCondition = null;
         CategoryQuery = null; 
         SearchFromUrl = null;
         currentPage = 1;
 
-        Navigation.NavigateTo("/products");
+        GoToProduct();
     }
 
-
-    private void GoToHome() => Navigation.NavigateTo("/");
+    private void GoToProduct() => Navigation.NavigateTo("/products", forceLoad: true);
+    private void GoToHome() => Navigation.NavigateTo("/", forceLoad: true);
     private void GoToProfile() => Navigation.NavigateTo("/profile");
     private void ToggleDropdown()
     {
@@ -403,38 +403,7 @@
             }
         }
     }
-    private async Task AddToCart(ProductDisplayViewModel product)
-    {
-        var currentUserId = SharedState.UserId;
-
-        if (currentUserId <= 0)
-        {
-            Navigation.NavigateTo("/login");
-            return;
-        }
-
-        var existingItem = await DB.CartItems
-            .FirstOrDefaultAsync(c => c.ProductId == product.ProductId && c.CustomerId == currentUserId);
-
-        if (existingItem != null)
-        {
-            existingItem.Quantity++;
-        }
-        else
-        {
-            var newItem = new CartItems
-            {
-                CustomerId = currentUserId,
-                ProductId = product.ProductId,
-                Quantity = 1,
-                DateAdded = DateTime.Now
-            };
-            DB.CartItems.Add(newItem);
-        }
-
-        await DB.SaveChangesAsync();
-        await UpdateCartCounter();
-    }
+    
     private int TotalItemsInCart;
 
     private async Task UpdateCartCounter()

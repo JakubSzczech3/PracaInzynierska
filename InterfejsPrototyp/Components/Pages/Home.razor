@@ -1,14 +1,14 @@
 ﻿@page "/"
+@rendermode InteractiveServer
 @using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
 @using Microsoft.EntityFrameworkCore
-@rendermode InteractiveServer
 @inject NavigationManager Navigation
 @inject SharedStateService SharedState
 @inject ProtectedSessionStorage SessionStorage
 @inject ProjectDbContext DB
 
 <PageTitle>Home</PageTitle>
-<link href="home.razor.css" rel="stylesheet" />
+
 <header class="header-section">
     <div class="header-left">
         <div class="header-logo" @onclick="GoToHome">

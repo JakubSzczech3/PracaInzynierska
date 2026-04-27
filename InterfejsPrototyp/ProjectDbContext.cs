@@ -14,6 +14,7 @@ namespace InterfejsPrototyp
         public DbSet<CartItems> CartItems { get; set; }
         public DbSet<Review> Reviews { get; set; }
         public DbSet<ProductImage> ProductImages { get; set; }
+        public DbSet<Order> Orders { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

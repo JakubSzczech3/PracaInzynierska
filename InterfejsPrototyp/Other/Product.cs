@@ -13,8 +13,8 @@ namespace InterfejsPrototyp.Other
         public int SellerId { get; set; }
         public string Condition { get; set; }
         public string? ImageUrl { get; set; }
-
-        public int StockQuantity { get; set; }
+        public int StockQuantity { get; set; } 
+        public bool IsActive { get; set; }
 
     }
 }

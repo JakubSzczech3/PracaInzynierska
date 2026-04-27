@@ -1,22 +1,12 @@
 ﻿:root {
     font-family: 'Montserrat';
     background-color: #F1ECEA;
-    color: #ff0000;
 }
 
-.header-section {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+.header-section, .footer-section {
     padding: 1rem 2rem;
     background-color: #0B7615;
     color: #FFFFFF;
-}
-
-.header-left {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
 }
 
 .header-logo {
@@ -24,39 +14,27 @@
     height: 100px;
     background-color: #e0e0e0;
     border-radius: 0.5rem;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    color: #a0a0a0;
+    cursor: pointer;
 }
 
     .header-logo:hover {
         transform: translateY(-3px);
-        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
     }
 
-
 .register-container {
-    display: flex;
-    flex-direction: column;
-    padding: 20px;
-    width: 100%;
     max-width: 1400px;
     margin: 20px auto;
+    padding: 20px;
 }
+
 .form-columns-wrapper {
     display: flex;
-    justify-content: space-between; 
-    gap: 20px; 
-    width: 100%;
+    gap: 20px;
     margin-bottom: 20px;
 }
 
-
 .form-column {
-    flex-grow: 1; 
-    flex-basis: 0;
-    align-self: stretch; 
+    flex: 1;
     background-color: #FFFFFF;
     border: 1px solid rgba(0, 0, 0, 0.1);
     border-radius: 0.5rem;
@@ -64,41 +42,13 @@
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
 }
 
-.register-container h2 {
-    color: #224470;
-    margin-top: 0;
-    margin-bottom: 1.5rem;
-    width: 100%; 
-    text-align: center;
-}
-
-.form-column h3 {
-    color: #224470;
-    margin-top: 0;
-    margin-bottom: 0.5rem;
-}
-
-.form-column hr {
-    border: 0;
-    border-top: 1px solid rgba(0, 0, 0, 0.1);
-    margin: 1.5rem 0;
-}
+    .register-container h2, .form-column h3 {
+        color: #224470;
+        text-align: center;
+    }
 
 
-.form-field label {
-    display: block;
-    margin-bottom: 0.5rem;
-    margin-top: 0.5rem;
-    color: #1a3350;
-    font-weight: 600;
-}
-
-.form-field input[type="email"],
-.form-field input[type="password"],
-.form-field input[type="text"],
-.form-field input[type="date"],
-.form-field input[type="tel"],
-.form-field select {
+.form-field .form-control {
     width: 100%;
     padding: 0.75rem;
     border: 1px solid rgba(0, 0, 0, 0.2);
@@ -106,59 +56,18 @@
     font-size: 1rem;
     box-sizing: border-box;
     color: #1a3350;
-    background-color: #FFFFFF;
-}
-
-    .form-field input::placeholder {
-        color: rgba(26, 26, 26, 0.5);
-    }
-
-
-.legal-consent {
-    display: flex;
-    align-items: center;
     margin-bottom: 0.5rem;
-    margin-right: 10px;
 }
-
-    .legal-consent input[type="checkbox"] {
-        margin-right: 10px;
-        margin-top: 3px;
-    }
-
-    .legal-consent .checkbox-label {
-        display: inline;
-        font-weight: normal;
-        color: #1a3350;
-        margin-bottom: 0.5rem;
-        font-size: 0.9rem;
-        margin-left: 5px;
-
-    }
-
-    .legal-consent a {
-        color: #224470;
-        text-decoration: none;
-    }
-
-        .legal-consent a:hover {
-            text-decoration: underline;
-        }
 
 .register-button {
     width: 100%;
     padding: 0.75rem;
     background-color: #224470;
     color: #FFFFFF;
-    border: none;
     border-radius: 0.5rem;
-    font-size: 1.1rem;
     cursor: pointer;
-    transition: background-color 0.2s ease;
-    margin-top: 1rem;
     text-transform: uppercase;
 }
-
     .register-button:hover {
         background-color: #1a3350;
     }
@@ -168,21 +77,20 @@
     text-align: center;
     margin-top: 1rem;
     color: #224470;
-    text-decoration: none;
-    font-size: 0.95rem;
+    text-decoration: underline;
 }
 
-    .login-link:hover {
-        text-decoration: underline;
+::deep .validation-message {
+    color: #d9534f !important; 
+}
+
+@media (max-width: 800px) {
+    .form-columns-wrapper {
+        flex-direction: column; 
+        gap: 15px; 
     }
 
-.footer-section {
-    padding: 1.5rem 2rem;
-    background-color: #0B7615;
-    text-align: left;
-    color: #FFFFFF;
-    font-size: 0.9rem;
+    .form-column {
+        width: 100%; 
+    }
 }
-
-
-

@@ -138,14 +138,25 @@
     animation: fadeInDown 0.5s ease-out;
 }
 
-@keyframes fadeInDown {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
+.auth-footer {
+    margin-top: 1rem;
+    text-align: center;
+}
+
+    .auth-footer p {
+        color: #333;
+        font-size: 0.95rem;
     }
 
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+.auth-link {
+    color: #224470;
+    font-weight: bold;
+    text-decoration: none;
+    transition: color 0.2s ease-in-out;
 }
+
+    .auth-link:hover {
+        color: #0B7615; 
+        text-decoration: underline;
+    }
+

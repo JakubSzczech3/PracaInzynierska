@@ -1,88 +1,4 @@
-﻿.add-product-container {
-    max-width: 800px;
-    margin: 2rem auto;
-    padding: 0 15px;
-    font-family: 'Montserrat', sans-serif;
-}
-
-.card {
-    border: 2px solid #0B7615; 
-    border-radius: 15px;
-    overflow: hidden;
-    background-color: #FFFFFF;
-}
-
-.card-header {
-    background-color: #0B7615; 
-    color: #FFFFFF;
-    border-bottom: 1px solid #096111;
-    padding: 1.5rem;
-    font-weight: bold;
-}
-
-.form-section label {
-    font-weight: 600;
-    margin-bottom: 0.5rem;
-    color: #224470;
-}
-.form-control:focus {
-    border-color: #0B7615; 
-    box-shadow: 0 0 0 0.2rem rgba(11, 118, 21, 0.25);
-}
-
-.image-preview {
-    border: 2px solid #d0d0d0;
-    padding: 10px;
-    border-radius: 10px;
-    cursor: pointer;
-    width: 130px;
-    text-align: center;
-    background-color: #fff;
-    transition: all 0.2s ease-in-out;
-}
-
-    .image-preview:hover {
-        background-color: #f1ecea;
-        border-color: #0B7615;
-    }
-
-
-    .image-preview.border-primary {
-        border-color: #224470 !important; 
-        background-color: #e9eff5;
-        box-shadow: 0 4px 8px rgba(34, 68, 112, 0.2);
-    }
-
-.badge.bg-primary {
-    background-color: #224470 !important; 
-    font-size: 0.65rem;
-    text-transform: uppercase;
-}
-
-
-.btn-primary {
-    background-color: #224470; 
-    border: none;
-    padding: 12px;
-    font-weight: 600;
-    border-radius: 10px;
-    transition: background-color 0.2s;
-}
-
-    .btn-primary:hover {
-        background-color: #1a3558; 
-    }
-
-
-.text-primary {
-    color: #0B7615 !important; 
-}
-:root {
-    font-family: 'Montserrat';
-    background-color: #F1ECEA;
-}
-
-.header-section {
+﻿.header-section {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -106,6 +22,8 @@
     justify-content: center;
     align-items: center;
     color: #a0a0a0;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    cursor: pointer;
 }
 
     .header-logo:hover {
@@ -122,20 +40,13 @@
     background-color: #224470;
     color: #FFFFFF;
     transition: background-color 0.2s;
+    cursor: pointer;
 }
 
     .auth-button:hover {
         background-color: #16325A;
     }
 
-.main-content-area {
-    flex-grow: 1;
-    padding: 2rem;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    font-family: 'Montserrat', sans-serif;
-}
 .footer-section {
     padding: 1.5rem 2rem;
     background-color: #0B7615;
@@ -143,7 +54,6 @@
     color: #FFFFFF;
     font-size: 0.9rem;
 }
-
 
 
 .access-denied-container {
@@ -172,13 +82,11 @@
         font-weight: 500;
     }
 
-
 .access-actions {
     display: flex;
     justify-content: center;
     gap: 15px;
 }
-
 
 .btn-login {
     background-color: transparent;
@@ -196,7 +104,6 @@
         color: white;
     }
 
-
 .btn-home {
     background-color: #f8f9fa;
     border: 1px solid #ddd;
@@ -210,4 +117,100 @@
 
     .btn-home:hover {
         background-color: #e2e6ea;
+    }
+
+.products-flex-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 15px;
+}
+
+/* Pojedyncza karta - układ poziomy */
+.product-horizontal-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 12px 20px;
+    transition: box-shadow 0.3s ease;
+}
+
+    .product-horizontal-card:hover {
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+/* Lewa strona karty: Foto + Tekst */
+.product-main-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.product-mini-img {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid #eee;
+}
+
+.product-text-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.product-name {
+    font-weight: bold;
+    font-size: 1.1rem;
+    color: #224470;
+}
+
+.product-meta {
+    font-size: 0.9rem;
+    color: #666;
+    display: flex;
+    gap: 10px;
+}
+
+.btn-edit-custom {
+    background-color: #224470;
+    color: white !important; 
+    border: none;
+    padding: 8px 20px;
+    border-radius: 6px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+    .btn-edit-custom:hover {
+        background-color: #1a3558;
+        color: #ffffff;
+    }
+
+.shipping-info-box {
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px dashed #ccc;
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    font-size: 0.85rem;
+    color: #444;
+}
+
+    .shipping-info-box strong {
+        color: #224470;
+        width: 100%;
+    }
+
+    .shipping-info-box span {
+        background: #f8f9fa;
+        padding: 2px 8px;
+        border-radius: 4px;
+        border: 1px solid #eee;
     }

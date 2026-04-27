@@ -25,7 +25,7 @@ namespace InterfejsPrototyp
             UserName = string.Empty;
             NotifyStateChanged();
         }
-        private void NotifyStateChanged() => OnChange?.Invoke();
+        public void NotifyStateChanged() => OnChange?.Invoke();
 
     }
 }

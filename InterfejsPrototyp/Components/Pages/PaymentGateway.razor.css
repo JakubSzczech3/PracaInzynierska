@@ -1,0 +1,245 @@
+﻿
+.payment-container {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    padding-top: 2rem;
+    min-height: 70vh;
+}
+
+.payment-card {
+    width: 100%;
+    max-width: 500px;
+    padding: 2.5rem;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    background-color: #ffffff;
+}
+
+.price-tag {
+    color: #28a745;
+    font-size: 1.5rem;
+    font-weight: bold;
+}
+
+.payment-details p {
+    margin-bottom: 0.5rem;
+    font-size: 1.1rem;
+}
+
+.action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 2rem;
+}
+
+.btn-provider {
+    background: white;
+    border: 1px solid #224470;
+    color: #224470;
+    padding: 12px;
+    border-radius: 4px;
+    transition: 0.3s;
+}
+
+.btn-execute {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 14px;
+    font-weight: bold;
+    border-radius: 4px;
+}
+
+.btn-cancel {
+    background: transparent;
+    border: none;
+    color: #6c757d;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+.loader-container {
+    text-align: center;
+    padding: 5rem;
+}
+.main-content {
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    align-items: center;
+}
+
+:root {
+    font-family: 'Montserrat', sans-serif;
+    background-color: #F1ECEA;
+}
+
+
+body {
+    color: #333;
+    margin: 0;
+}
+
+.header-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+    background-color: #0B7615;
+    color: #FFFFFF;
+    position: relative;
+    z-index: 1000;
+}
+
+
+.header-logo {
+    width: 100px;
+    height: 100px;
+    background-color: #e0e0e0;
+    border-radius: 0.5rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #a0a0a0;
+    cursor: pointer;
+}
+
+
+
+
+.search-button {
+    border-radius: 0.5rem;
+    padding: 0.4rem 0.8rem;
+    border: 1px solid #224470;
+    background-color: #224470;
+    color: #FFFFFF;
+    cursor: pointer;
+}
+
+.button-provider {
+    width: 100%;
+    padding: 0.75rem;
+    background-color: #224470;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 0.5rem;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+    .button-provider:hover {
+        background-color: #1a3350;
+    }
+
+.validation-message {
+    color: #dc3545;
+    font-size: 0.9rem;
+    margin-top: 5px;
+    display: block;
+}
+
+
+
+.main-content {
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    align-items: center;
+}
+
+
+.footer-section {
+    padding: 1.5rem 2rem;
+    background-color: #0B7615;
+    color: #FFFFFF;
+}
+
+.btn-provider {
+    background: white;
+    border: 1px solid #224470;
+    color: #224470;
+    padding: 12px;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease; 
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.btn-provider:hover {
+    background-color: #f0f4f8; 
+    border-color: #1a3350; 
+    color: #1a3350;
+    box-shadow: 0 2px 8px rgba(34, 68, 112, 0.1);
+}
+
+
+.btn-execute {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 14px;
+    font-weight: bold;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+    .btn-execute:hover {
+        background-color: #218838; 
+        box-shadow: 0 4px 12px rgba(40, 167, 69, 0.2);
+        transform: translateY(-1px); 
+    }
+
+    .btn-execute:active {
+        transform: translateY(0); 
+    }
+.success-icon {
+    font-size: 4rem;
+    color: #28a745;
+    display: block;
+    margin-bottom: 1rem;
+}
+
+.spinner-border {
+    width: 3rem;
+    height: 3rem;
+    margin-bottom: 1rem;
+}
+
+.alert-danger {
+    background-color: #f8d7da;
+    color: #721c24;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin-top: 1rem;
+    border: 1px solid #f5c6cb;
+}
+
+.btn-cancel {
+    background: transparent;
+    border: none;
+    color: #6c757d;
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 8px;
+    transition: color 0.2s ease;
+}
+
+    .btn-cancel:hover {
+        color: #333; 
+    }
+
+.processing-status {
+    color: #224470;
+    font-weight: 500;
+}

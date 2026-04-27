@@ -1,0 +1,173 @@
+﻿@page "/edit-profile"
+@rendermode InteractiveServer
+@using InterfejsPrototyp.Other
+@using Microsoft.EntityFrameworkCore
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@using BCrypt.Net
+@inject ProtectedSessionStorage SessionStorage
+@inject SharedStateService SharedState
+@inject NavigationManager Navigation
+@inject ProjectDbContext DB
+
+
+<PageTitle>Edit Profile & Address</PageTitle>
+
+<header class="header-section">
+    <div class="header-left">
+        <div class="header-logo" @onclick="() => GoToHome()"></div>
+        <h1>Account settings</h1>
+    </div>
+    @if (SharedState.UserId > 0)
+    {
+        <div class="header-right">
+            <span class="welcome-text">Logged in as: <b>@SharedState.UserName</b></span>
+            <button class="auth-button" @onclick="() => HandleLogout()">Log out</button>
+        </div>
+    }
+</header>
+
+<main class="main-content-area">
+    <div class="edit-profile-wrapper">
+        @if (customerToEdit != null)
+        {
+            <div class="edit-columns-container">
+                <section class="profile-data-block">
+                    <div class="block-header profile-header">
+                        <h4>Profile information</h4>
+                    </div>
+                    <div class="block-body">
+                        <div class="field-group">
+                            <label>First name</label>
+                            <input @bind="customerToEdit.FirstName" />
+                        </div>
+                        <div class="field-group">
+                            <label>Last name</label>
+                            <input @bind="customerToEdit.LastName" />
+                        </div>
+                        <div class="field-group">
+                            <label>Email</label>
+                            <input @bind="customerToEdit.Email" type="email" />
+                        </div>
+                        <div class="field-group">
+                            <label>Phone number</label>
+                            <input @bind="customerToEdit.PhoneNumber" />
+                        </div>
+                        <div class="field-divider"></div>
+                        <div class="field-group">
+                            <label>Change password</label>
+                            <input @bind="newPassword" type="password" placeholder="Enter new password" />
+                        </div>
+                    </div>
+                </section>
+
+                <section class="profile-data-block">
+                    <div class="block-header profile-header">
+                        <h4>Address details</h4>
+                    </div>
+                    <div class="block-body">
+                        @if (customerAddress != null)
+                        {
+                            <div class="field-group">
+                                <label>Street address</label>
+                                <input @bind="customerAddress.StreetAddress" />
+                            </div>
+                            <div class="field-group">
+                                <label>City</label>
+                                <input @bind="customerAddress.City" />
+                            </div>
+                            <div class="field-group">
+                                <label>Postal code</label>
+                                <input @bind="customerAddress.PostalCode" />
+                            </div>
+                            <div class="field-group">
+                                <label>Country</label>
+                                <select @bind="customerAddress.CountryName">
+                                    <option value="">-- Select Country --</option>
+                                    @if (availableCountries != null)
+                                    {
+                                        @foreach (var country in availableCountries)
+                                        {
+                                            <option value="@country.Name">@country.Name</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                        }
+                    </div>
+                </section>
+            </div>
+
+            <div class="action-buttons-container">
+                <button class="btn-save" @onclick="UpdateProfile">Save all changes</button>
+                <button class="btn-cancel" @onclick="GoToProfile">Cancel</button>
+            </div>
+        }
+    </div>
+</main>
+
+<footer class="footer-section">
+    Footer
+</footer>
+
+@code {
+    private Customer? customerToEdit;
+    private Address? customerAddress;
+    private List<Country>? availableCountries;
+    private int loggedUserId;
+    private bool isChecking = true;
+    private string? newPassword;
+
+    private void GoToHome() => Navigation.NavigateTo("/", forceLoad: true);
+    private void GoToProfile() => Navigation.NavigateTo("/profile");
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                var result = await SessionStorage.GetAsync<int>("userId");
+                if (result.Success && result.Value > 0)
+                {
+                    loggedUserId = result.Value;
+                    customerToEdit = await DB.Customers.FirstOrDefaultAsync(c => c.CustomerId == loggedUserId);
+                    customerAddress = await DB.Addresses.FirstOrDefaultAsync(a => a.CustomerId == loggedUserId);
+                    availableCountries = await DB.Countries.OrderBy(c => c.Name).ToListAsync();
+                }
+            }
+            catch { }
+            isChecking = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task UpdateProfile()
+    {
+        if (customerToEdit is not null)
+        {
+            if (!string.IsNullOrWhiteSpace(newPassword))
+            {
+                string salt = BCrypt.GenerateSalt(12);
+                customerToEdit.PasswordHash = BCrypt.HashPassword(newPassword, salt);
+            }
+            await DB.SaveChangesAsync();
+
+            SharedState.Login(customerToEdit.CustomerId, customerToEdit.FirstName);
+            await SessionStorage.SetAsync("userName", customerToEdit.FirstName);
+
+            Navigation.NavigateTo("/profile");
+        }
+    }
+
+    private async Task HandleLogout()
+    {
+        SharedState.Logout();
+        try
+        {
+            await SessionStorage.DeleteAsync("userId");
+            await SessionStorage.DeleteAsync("userName");
+        }
+        catch { }
+        Navigation.NavigateTo("/", forceLoad: true);
+    }
+}

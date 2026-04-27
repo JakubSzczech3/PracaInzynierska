@@ -5,118 +5,133 @@
 @inject ProjectDbContext DB
 @inject NavigationManager Navigation
 @inject SharedStateService SharedState
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@inject ProtectedSessionStorage SessionStorage
 
-<div class="container mt-5">
-    <button class="btn btn-outline-secondary mb-4" @onclick="GoBack">
-        &laquo; Back to products
-    </button>
+<header class="header-section">
+    <div class="header-left">
+        <div class="header-logo" @onclick="GoToHome"></div>
+        <button class="return-button" @onclick="GoToProduct">&laquo; Back to products</button>
+    </div>
+    <div class="header-right">
+        @if (SharedState.IsLoggedIn)
+        {
+            <div class="user-dropdown-container">
+                <div class="dropdown-trigger" @onclick="ToggleDropdown">
+                    Witaj, <b>@SharedState.UserName</b>! <span class="arrow">▼</span>
+                </div>
+                @if (isDropdownOpen)
+                {
+                    <div class="dropdown-menu">
+                        <button class="dropdown-item" @onclick="GoToProfile">Profile</button>
+                        <hr class="dropdown-divider" />
+                        <button class="dropdown-item logout" @onclick="HandleLogout">Log out</button>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <button class="auth-button" @onclick="GoToLogin">Log in</button>
+        }
+    </div>
+</header>
 
+<div class="main-wrapper">
     @if (product is null)
     {
-        <div class="text-center">
-            <div class="spinner-border text-primary" role="status"></div>
+        <div class="loader-box">
+            <div class="spinner"></div>
             <p>Loading...</p>
         </div>
     }
     else
     {
-
-        <div class="row shadow-sm bg-white rounded p-4">
-            <div class="col-md-6">
-                <div class="details-img-holder text-center mb-3">
-                    <img src="@mainImageUrl"
-                         class="img-fluid rounded product-main-img shadow-sm"
-                         alt="@product.Name"
-                         style="max-height: 450px; object-fit: contain; width: 100%;"
-                         onerror="this.src='/uploads/placeholder.jpg';" />
+        <article class="product-container">
+            <section class="product-gallery">
+                <div class="main-image-box">
+                    <img src="@mainImageUrl" class="product-main-img" alt="@product.Name" />
                 </div>
 
                 @if (productImages != null && productImages.Count > 1)
                 {
-                    <div class="d-flex gap-2 justify-content-center flex-wrap mt-2">
+                    <div class="thumbnail-list">
                         @foreach (var img in productImages)
                         {
-                            <div class="thumb-wrapper @(mainImageUrl == img.ImagePath ? "active-thumb" : "")"
+                            <div class="thumb-item @(mainImageUrl == img.ImagePath ? "active-thumb" : "")"
                                  @onclick="() => mainImageUrl = img.ImagePath">
-                                <img src="@img.ImagePath" class="img-thumbnail"
-                                     style="width: 70px; height: 70px; cursor: pointer; object-fit: cover;" />
+                                <img src="@img.ImagePath" />
                             </div>
                         }
                     </div>
                 }
-            </div>
+            </section>
 
-            <div class="col-md-6">
-                <nav aria-label="breadcrumb">
-                    <ol class="breadcrumb">
-                        <li class="breadcrumb-item text-muted">@categoryName</li>
-                        <li class="breadcrumb-item active">@product.Condition</li>
-                    </ol>
+            <section class="product-info">
+                <nav class="breadcrumb-trail">
+                    <span class="category">@categoryName</span>
+                    <span class="divider">|</span>
+                    <span class="condition">@product.Condition</span>
                 </nav>
 
-                <h1 class="display-5 fw-bold">@product.Name</h1>
+                <h1 class="product-name">@product.Name</h1>
+
                 @if (reviews.Any())
                 {
-                    <div class="mb-2 text-warning">
-                        @for (int i = 1; i <= 5; i++)
-                        {
-                            <span>@(i <= Math.Round(AverageRating) ? "★" : "☆")</span>
-                        }
-                        <span class="text-muted small ms-2">(@reviews.Count reviews)</span>
+                    <div class="rating-summary">
+                        <span class="stars">
+                            @for (int i = 1; i <= 5; i++)
+                            {
+                                <span>@(i <= Math.Round(AverageRating) ? "★" : "☆")</span>
+                            }
+                        </span>
+                        <span class="review-count">(@reviews.Count reviews)</span>
                     </div>
                 }
-                <p class="text-success fs-2 fw-bold">@product.Price.ToString("N2") PLN</p>
 
-                <hr />
+                <div class="price-tag">@product.Price.ToString("N2") PLN</div>
 
-                <div class="buy-section p-3 bg-light rounded shadow-sm">
+                <div class="purchase-box">
                     @if (product.StockQuantity > 0)
                     {
-                        <div class="mb-3">
-                            <label for="quantity" class="form-label fw-bold">Select quantity:</label>
-                            <div class="d-flex align-items-center">
-                                <input type="number" id="quantity" class="form-control quantity-input"
-                                       @bind="selectedQuantity" min="1" max="@product.StockQuantity" style="width: 80px;" />
-                                <span class="ms-3 text-muted">Available: <b>@product.StockQuantity pcs.</b></span>
+                        <div class="quantity-selector">
+                            <label>Select quantity:</label>
+                            <div class="input-row">
+                                <input type="number" class="qty-input" @bind="selectedQuantity" min="1" max="@product.StockQuantity" />
+                                <span class="stock-status">Available: <b>@product.StockQuantity pcs.</b></span>
                             </div>
                         </div>
-
-                        <button class="btn btn-primary btn-lg w-100 shadow" @onclick="AddToCart">
-                            <i class="bi bi-cart-plus me-2"></i> Add to cart
-                        </button>
+                        <button class="buy-button" @onclick="AddToCart">Add to cart</button>
                     }
                     else
                     {
-                        <div class="alert alert-danger mb-0 text-center fw-bold">
-                            Product out of stock.
-                        </div>
+                        <div class="out-of-stock-msg">Product out of stock.</div>
                     }
                 </div>
 
-                <div class="product-description-box mt-4">
-                    <h5>Description:</h5>
-                    <p class="text-muted product-description-text">@product.Description</p>
+                <div class="description-section">
+                    <h3>Description:</h3>
+                    <p>@product.Description</p>
                 </div>
 
-                <div class="seller-info mt-4 p-3 bg-white border rounded">
-                    <p class="mb-0 text-muted small">Seller:</p>
-                    <p class="mb-0 fw-bold">@sellerName</p>
+                <div class="seller-card">
+                    <span class="label">Seller:</span>
+                    <span class="value">@sellerName</span>
                 </div>
-            </div>
-        </div>
+            </section>
+        </article>
 
-        <div class="mt-5 mb-5 pb-5">
-            <h3 class="mb-4">Customer Reviews (@reviews.Count)</h3>
-
+        <section class="reviews-area">
+            <h2 class="reviews-title">Customer reviews (@reviews.Count)</h2>
 
             @if (SharedState.UserId > 0)
             {
-                <div class="card p-4 mb-4 shadow-sm border-0 bg-light">
-                    <h5 class="mb-3">Add a Review</h5>
-                    <div class="row g-3">
-                        <div class="col-md-3">
-                            <label class="form-label fw-bold">Rating</label>
-                            <select @bind="newReview.Rating" class="form-select">
+                <div class="add-review-form">
+                    <h3>Add a review</h3>
+                    <div class="form-grid">
+                        <div class="field-group">
+                            <label>Rating</label>
+                            <select @bind="newReview.Rating" class="rating-select">
                                 <option value="5">5 - Excellent</option>
                                 <option value="4">4 - Good</option>
                                 <option value="3">3 - Average</option>
@@ -124,39 +139,36 @@
                                 <option value="1">1 - Terrible</option>
                             </select>
                         </div>
-                        <div class="col-12">
-                            <textarea @bind="newReview.Comment" class="form-control" rows="3" placeholder="What do you think about this product?"></textarea>
+                        <div class="field-group full-width">
+                            <textarea @bind="newReview.Comment" placeholder="What do you think about this product?"></textarea>
                         </div>
-                        <div class="col-12 text-end">
-                            <button class="btn btn-success px-5" @onclick="SubmitReview">Post Review</button>
+                        <div class="form-actions">
+                            <button class="submit-review-btn" @onclick="SubmitReview">Post review</button>
                         </div>
                     </div>
                 </div>
             }
             else
             {
-                <div class="alert alert-info shadow-sm mb-4">
-                    Please <a href="/login" class="fw-bold">login</a> to leave a review.
+                <div class="login-prompt">
+                    Please <a href="/login">login</a> to leave a review.
                 </div>
             }
 
-
-            <div class="list-group shadow-sm">
+            <div class="reviews-list">
                 @if (!reviews.Any())
                 {
-                    <div class="list-group-item p-4 text-center text-muted bg-white">
-                        No reviews yet. Be the first to share your opinion!
-                    </div>
+                    <div class="no-reviews">No reviews yet. Share your opinion!</div>
                 }
                 else
                 {
                     @foreach (var rev in reviews)
                     {
-                        <div class="list-group-item p-4 bg-white shadow-sm mb-2 rounded">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div>
-                                    <h6 class="mb-0 fw-bold">@(rev.Customer?.FirstName ?? "User")</h6>
-                                    <div class="text-warning">
+                        <div class="review-card">
+                            <div class="review-header">
+                                <div class="user-info">
+                                    <span class="user-name">@(rev.Customer?.FirstName ?? "User")</span>
+                                    <div class="user-rating">
                                         @for (int i = 1; i <= 5; i++)
                                         {
                                             <span>@(i <= rev.Rating ? "★" : "☆")</span>
@@ -164,28 +176,27 @@
                                     </div>
                                 </div>
 
-                                <div class="d-flex align-items-center">
-                                    @if (currentUserRole == "Admin")
-                                    {
-                                        <div class="admin-controls ms-3">
-                                            <button class="btn btn-sm btn-outline-danger me-2" @onclick="() => DeleteReview(rev.ReviewId)">
-                                                <i class="bi bi-trash"></i> Delete
-                                            </button>
-                                            <button class="btn btn-sm btn-danger" @onclick="() => BanUser(rev.CustomerId)">
-                                                <i class="bi bi-person-x"></i> Ban & Clean
-                                            </button>
-                                        </div>
-                                    }
-                                </div>
+                                @if (currentUserRole == "Admin")
+                                {
+                                    <div class="admin-actions">
+                                        <button class="btn-delete" @onclick="() => DeleteReview(rev.ReviewId)">Delete</button>
+                                        <button class="btn-ban" @onclick="() => BanUser(rev.CustomerId)">Ban & Clean</button>
+                                    </div>
+                                }
                             </div>
-                            <p class="mt-2 mb-0">@rev.Comment</p>
+                            <p class="review-text">@rev.Comment</p>
                         </div>
                     }
                 }
             </div>
-        </div>
+        </section>
     }
 </div>
+
+
+<footer class="footer-section">
+    Footer
+</footer>
 
 @code {
     [Parameter] public int Id { get; set; }
@@ -208,6 +219,12 @@
 
         if (product != null)
         {
+            productImages = await DB.ProductImages
+            .AsNoTracking()
+            .Where(img => img.ProductId == Id)
+            .ToListAsync();
+
+            mainImageUrl = productImages.FirstOrDefault()?.ImagePath ?? "/uploads/placeholder.jpg";
             var cat = await DB.Categories.AsNoTracking()
                 .FirstOrDefaultAsync(c => c.CategoryId == product.CategoryId);
             categoryName = cat?.Name ?? "Unknown";
@@ -227,7 +244,26 @@
             }
         }
     }
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var resultId = await SessionStorage.GetAsync<int>("userId");
+            var resultName = await SessionStorage.GetAsync<string>("userName");
 
+            if (resultId.Success && resultName.Success)
+            {
+                if (!SharedState.IsLoggedIn)
+                {
+                    SharedState.Login(resultId.Value, resultName.Value!);
+                    var user = await DB.Customers.AsNoTracking()
+                    .FirstOrDefaultAsync(c => c.CustomerId == resultId.Value);
+                    currentUserRole = user?.Role ?? "";
+                    StateHasChanged();
+                }
+            }
+        }
+    }
     private async Task LoadReviews()
     {
         reviews = await DB.Reviews
@@ -261,14 +297,30 @@
             return;
         }
 
-        if (product != null && selectedQuantity > 0)
+
+        var dbProduct = await DB.Products.FindAsync(product.ProductId);
+
+        if (dbProduct != null && selectedQuantity > 0)
         {
+
+            if (selectedQuantity > dbProduct.StockQuantity)
+            {
+                selectedQuantity = dbProduct.StockQuantity;
+            }
+
             var existingItem = await DB.CartItems
                 .FirstOrDefaultAsync(c => c.ProductId == product.ProductId && c.CustomerId == SharedState.UserId);
 
             if (existingItem != null)
             {
-                existingItem.Quantity += selectedQuantity;
+                if (existingItem.Quantity + selectedQuantity > dbProduct.StockQuantity)
+                {
+                    existingItem.Quantity = dbProduct.StockQuantity;
+                }
+                else
+                {
+                    existingItem.Quantity += selectedQuantity;
+                }
             }
             else
             {
@@ -283,6 +335,7 @@
             }
 
             await DB.SaveChangesAsync();
+            SharedState.NotifyStateChanged();
             Navigation.NavigateTo("/cart");
         }
     }
@@ -318,5 +371,30 @@
 
 
 
-    private void GoBack() => Navigation.NavigateTo("/products");
+    private void GoToProduct() => Navigation.NavigateTo("/products", forceLoad: true);
+    private void GoToHome() => Navigation.NavigateTo("/", forceLoad: true);
+    private void GoToProfile() => Navigation.NavigateTo("/profile");
+    private void GoToLogin() => Navigation.NavigateTo("/login");
+    private async Task HandleLogout()
+    {
+        isDropdownOpen = false;
+        SharedState.Logout();
+        try
+        {
+            await SessionStorage.DeleteAsync("userId");
+            await SessionStorage.DeleteAsync("userName");
+        }
+        catch
+        {
+        }
+    }
+    private bool isDropdownOpen = false;
+
+    private void ToggleDropdown()
+    {
+        isDropdownOpen = !isDropdownOpen;
+        StateHasChanged();
+    }
+
+
 }
